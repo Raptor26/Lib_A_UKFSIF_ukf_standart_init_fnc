@@ -82,13 +82,10 @@
 
 
 /*#### |Begin| --> Секция - "Определение типов" ##############################*/
-typedef struct
-{
-	__UKFSIF_FPT__ lambda;
-	__UKFSIF_FPT__ *pWeightMean;
-	__UKFSIF_FPT__ *pWeightCov;
-} ufksif_scaling_weight_s;
 
+/*-------------------------------------------------------------------------*//**
+ * @brief Коэффициенты для распределения сигма-точек
+ */
 typedef struct
 {
 	__UKFSIF_FPT__ alpha;
