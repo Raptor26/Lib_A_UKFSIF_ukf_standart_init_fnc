@@ -116,7 +116,16 @@ extern void
 UKFSIF_InitWeightVectorCov(
 	ukfsif_scaling_param_s 	*pScalParams_s,
 	__UKFSIF_FPT__ 			*pWeightCov,
-	uint16_t 				 vectLen);
+	uint16_t vectLen);
+
+extern void
+UKFSIF_CalculateTheSigmaPoints_2L1(
+	__UKFSIF_FPT__ *pStateVect,
+	__UKFSIF_FPT__ *pSigmaPoints,
+	__UKFSIF_FPT__ *pSqrtP, 			/* Указатель на двумерный массив, в котором содержится квадратный корень из матрицы ковариаций */
+	__UKFSIF_FPT__  sqrtLenLambda,
+	uint16_t 		stateVectLen, 		/* Длина вектора пространства состояний, совпадает с количеством строк матрицы Сигма-точек */
+);
 /*#### |End  | <-- Секция - "Прототипы глобальных функций" ###################*/
 
 

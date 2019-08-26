@@ -130,6 +130,75 @@ UKFSIF_InitWeightVectorCov(
 	pWeightCov[0u] =
 		(lambda / (((__UKFSIF_FPT__) vectLen) + lambda)) + ((__UKFSIF_FPT__)1.0) - (pScalParams_s->alpha * pScalParams_s->alpha) + pScalParams_s->beta;
 }
+
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      26-авг-2019
+ *
+ * @brief    Функция генерирует массив Сигма-точек методом 2L+1
+ *
+ * @param[in]       *pStateVect:	Указатель на двумерный массив,
+ * 									содержащий матрицу пространства состояний
+ * @param[out]   	*pSigmaPoints: Указатель на двумерный массив,
+ * @param[in,out]   *pSqrtP: Пп sqrt p
+ * @param[in]    	sqrtLenLambda: Длина лямбда
+ * @param[in]    	stateVectLen: Государство vect длина
+ * @param[in]    	sigmaPointsColNumb:    Сигма указывает на онемение
+ */
+void
+UKFSIF_CalculateTheSigmaPoints_2L1(
+	__UKFSIF_FPT__ *pStateVect,
+	__UKFSIF_FPT__ *pSigmaPoints,
+	__UKFSIF_FPT__ *pSqrtP, 			/* Указатель на двумерный массив, в котором содержится квадратный корень из матрицы ковариации */
+	__UKFSIF_FPT__  sqrtLenLambda,
+	uint16_t 		stateVectLen, 		/* Длина вектора пространства состояний, совпадает с количеством строк матрицы Сигма-точек */
+)
+{
+	/* Количество столбцов матрицы Сигма-точек */
+	uint16_t sigmaPointsColNumb = 
+		(stateVectLen * 2u) + 1u;
+
+	/* Заполнение 1-го столбца матрицы Сигма-точек */
+	size_t j;
+	for (j = 0u; j < stateVectLen; j++)
+	{
+		/* Копирование матрицы вектора пространства состояний в 1-й
+		 * столбец матрицы Сигма-точек */
+		/* Помни, pSigmaPoints 	- указатель на двумерный массив
+		 * Помни, pStateVect 	- указатель на двумерный массив */
+		pSigmaPoints[j * stateVectLen] =
+			pStateVect[j * stateVectLen];
+	}
+
+	/* Умножить матрицу квадратного корня из ковариации на скаляр */
+	for (j = 0u; j < (stateVectLen * sigmaPointsColNumb); j++)
+	{
+		pSqrtP[j] *= sqrtLenLambda;
+	}
+
+	/* Генерация остальных сигма-точек */
+	size_t i;
+	size_t jIdx = 0u, iIdx = 1u;
+	/* @FIXME Удалить эту переменную и заменить на значение из принимаемого параметра */
+	size_t iIdxOffset = stateVectLen;
+	for (j = 0u; j < stateVectLen; j++)
+	{
+		for (i = 0u; i < stateVectLen; i++)
+		{
+			pSigmaPoints[jIdx * iIdx] =
+				pStateVect[j * i] + pSqrtP[j * i];
+
+			pSigmaPoints[jIdx * (iIdx + iIdxOffset)] =
+				pStateVect[j * i] - pSqrtP[j * i];
+			iIdx++;
+			if (iIdx >= (iIdxOffset + 1u))
+			{
+				iIdx = 1u;
+				jIdx++;
+			}
+		}
+	}
+}
 /*#### |End  | <-- Секция - "Описание глобальных функций" ####################*/
 
 
