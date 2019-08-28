@@ -345,6 +345,157 @@ UKFSIF_Step2_CalculateCovarianceOfPredictedState(
 	}
 
 }
+
+void
+UKFSIF_Step3_CalculateMeanOfPredictedOutput(
+	ukfsif_step3_params_2l1_s *pData_s)
+{
+	UKFMO_MatrixMultiplication(
+		pData_s->pMatrix_a[UKFSIF_STEP3_psi_apriori],
+		pData_s->pMatrix_a[UKFSIF_STEP3_MUMEAN],
+		pData_s->pMatrix_a[UKFSIF_STEP3_y_apriori]);
+}
+
+void
+UKFSIF_Step3_CalculateCovarianceOfPredictedOutputAndCrossCovariance(
+	ukfsif_step3_params_2l1_s *pData_s)
+{
+	/* Calculate covariance of predicted output */
+
+	/* Calculate cross-covariance of state and output */
+}
+
+void
+UKFSIF_CalcCovarGeneric(
+	ukfsif_calc_covar_generic_s *pData_s)
+{
+	size_t i, j;
+	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); j++)
+	{
+		/* Найти разницу между вектор-столбцом пространства состояний и
+		 * вектор-столбцом матрицы Сигма-точек */
+		for (j = 0u; j < pData_s->stateLen; j++)
+		{
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori]->pData[j] =
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori]->pData[j * i]
+				- pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_vect_apriori]->pData[j * pData_s->stateLen];
+
+//				/* Копирование каждого столбца во временный массив
+//				 * "UKFSIF_STEP2_CHI_MINUS_STATE_TEMP" размерностью (Lx2L+1)
+//				 * для дальнейшего использования на "Step3 Calculate cross-covariance
+//				 * of state and output" */
+//				pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory_TEMP]->pData[i * j] =
+//					pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory]->pData[j];
+		}
+
+		/* Транспонирование */
+		UKFMO_MatrixTranspose(
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori],
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori_TRANSPOSE]);
+
+		/* Умножение вектор-столбца на его транспонированную версию */
+		UKFMO_MatrixMultiplication(
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori],
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori_TRANSPOSE],
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX]);
+
+		/* Умножение матрицы LxL на скаляр весового коэффициента */
+		UKFMO_MatrixMultScale(
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX],
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_muCovar]->pData[i],
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX]);
+
+		/* Сложить с предыдущим результатом */
+		UKMO_MatrixAdition(
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX],
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori]);
+	}
+}
+
+void
+UKFSIF_CaclMeanGeneric(
+	ukfsif_calc_mean_generic_s *pData_s)
+{
+	UKFMO_MatrixMultiplication(
+		pData_s->pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_sigma_apriori],
+		pData_s->pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_muMean],
+		pData_s->pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_vect_apriori]);
+}
+
+void
+UKFSIF_Step4_CalcKalmanGain(
+	ukfsif_calc_kalman_gain_s *pData_s)
+{
+	/* Найти обратную матрицу от P_yy */
+	UKFMO_MatrixIdentity(
+		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV]);
+	UKFMO_MatrixInverse(
+		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy],
+		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV]);
+
+	/* Найти матрицу усиления Калмана */
+	UKFMO_MatrixMultiplication(
+		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pxy],
+		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV],
+		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_K]);
+
+}
+
+void
+UKFSIF_Step4_UpdateStateEstimate(
+	ukfsif_update_state_s *pData_s)
+{
+	/* Найти Инновацию, т.е. разницу между вектором измерений и его
+	 * предсказанным значением */
+	UKMO_MatrixSubstraction(
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_meas],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_x_apriori],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation]);
+
+	/* Умножить матрицу усиления на Инновацию */
+	UKFMO_MatrixMultiplication(
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_K],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation]);
+
+	/* Сложить вектор пространства состояний с умноженной на матрицу
+	 * усиления Инновацией */
+	UKMO_MatrixAdition(
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_x_apriori],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_x_posteriori]);
+}
+
+void
+UKFSIF_Step4_UpdateErrorCovariance(
+	ukfsif_update_err_covar_s *pData_s)
+{
+	/* Найти транспонированную матрицу от матрицы коэффициентов усиления */
+	UKFMO_MatrixTranspose(
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K_TRANSPOSE]);
+
+	/* Умножить матрицу усиления на Pyy */
+	UKFMO_MatrixMultiplication(
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_Pyy],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
+
+	/* Результат умножения K и Pyy  умножить на транспонированную матрицу
+	 * коэффициентов усиления */
+	UKFMO_MatrixMultiplication(
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K_TRANSPOSE],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
+
+	/* из "P_k|k-1" вычесть результат, полученный выше */
+	UKMO_MatrixSubstraction(
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_apriori],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
+
+}
 /*#### |End  | <-- Секция - "Описание глобальных функций" ####################*/
 
 
