@@ -155,7 +155,7 @@ UKFSIF_CalculateTheSigmaPoints_2L1(
 )
 {
 	/* Количество столбцов матрицы Сигма-точек */
-	uint16_t sigmaPointsColNumb = 
+	uint16_t sigmaPointsColNumb =
 		(stateVectLen * 2u) + 1u;
 
 	/* Заполнение 1-го столбца матрицы Сигма-точек */
@@ -198,6 +198,152 @@ UKFSIF_CalculateTheSigmaPoints_2L1(
 			}
 		}
 	}
+}
+
+void
+UKFSIF_StructInit_Step2Data(
+	ukfsif_step2_params_2l1_s 		*pData_s)
+{
+	size_t i;
+	for (i = 0; i < UKFSIF_STEP2_ARR_CELL_NUMB; i++)
+	{
+		/* Сброс указателей на структуры в NULL */
+		pData_s->pMatrix_a[i] = NULL;
+	}
+
+	/* Сброс длины пространства состояний в нуль */
+	pData_s->stateLen = 0u;
+}
+
+void
+UKFSIF_Init_Step2Data(
+	ukfsif_step2_params_2l1_s 		*pData_s,
+	ukfsif_step2_params_2l1_init_s 	*pInit_s)
+{
+	/* Адреса структур "ukfsif_step2_params_2l1_s" и
+	 * "ukfsif_step2_params_2l1_init_s" не должны совпадать */
+	if (pInit_s == pData_s)
+	{
+		while (1);
+	}
+
+//	/* Сброс указателей в нуль */
+//	size_t i;
+//	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
+//	{
+//		pData_s->pMemAddr_a[i] = NULL;
+//	}
+//	/* Сброс длины вектора пространства состояний */
+//	pData_s->stateLen = 0u;
+//
+//	/* Копирование указателей из структуры инициализации в рабочую структуру */
+//	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
+//	{
+//		pData_s->pMemAddr_a[i] = pInit_s->pMemAddr_a[i];
+//	}
+//
+//	/* Копирование длины вектора пространства состояний */
+//	pData_s->stateLen = pInit_s->stateLen;
+//
+//	/* Проверка области памяти на указатель NULL */
+//	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
+//	{
+//		/* Если адрес равен NULL */
+//		if (pData_s->pMemAddr_a[i] == NULL)
+//		{
+//			/* Зависнуть */
+//			while (1);
+//		}
+//	}
+//	/* Если длина вектора пространства состояний меньше 1 */
+//	if (pData_s->stateLen < 1u)
+//	{
+//		/* Зависнуть */
+//		while (1);
+//	}
+
+	size_t i;
+
+	/* Проверка массива указателей на структуры */
+	for (i = 0;
+		 i < ((size_t) UKFSIF_STEP2_ARR_CELL_NUMB);
+		 i++)
+	{
+		/* Если один из указателей на матрицы не инициализирован */
+		if (pData_s->pMatrix_a[i]->pData 	== NULL ||
+			pData_s->pMatrix_a[i]->numCols 	== 0u 	||
+			pData_s->pMatrix_a[i]->numRows 	== 0u	||
+			pData_s->pMatrix_a[i] 			== NULL)
+		{
+			/* Зависнуть */
+			while (1);
+		}
+	}
+}
+
+void
+UKFSIF_Step2_CalculateMeanOfPredictedState(
+	ukfsif_step2_params_2l1_s *pData_s)
+{
+	UKFMO_MatrixMultiplication(
+		pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory],
+		pData_s->pMatrix_a[UKFSIF_STEP2_MUMEAN],
+		pData_s->pMatrix_a[UKFSIF_STEP2_x_priory]);
+}
+
+void
+UKFSIF_Step2_CalculateCovarianceOfPredictedState(
+	ukfsif_step2_params_2l1_s *pData_s)
+{
+	/* Копирование матрицы шумов в матрицу Ковариации "P_k|k-1" */
+	memcpy(
+		(void*) pData_s->pMatrix_a[UKFSIF_STEP2_P_apriory]->pData,
+		(void*) pData_s->pMatrix_a[UKFSIF_STEP2_Q]->pData,
+		pData_s->stateLen * ((pData_s->stateLen * 2) + 1u));
+
+	size_t i, j;
+	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); j++)
+	{
+		/* Найти разницу между вектор-столбцом пространства состояний и
+		 * вектор-столбцом матрицы Сигма-точек */
+		for (j = 0u; j < pData_s->stateLen; j++)
+		{
+			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory]->pData[j] =
+				pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory]->pData[j * i]
+				- pData_s->pMatrix_a[UKFSIF_STEP2_x_priory]->pData[j * pData_s->stateLen];
+
+			/* Копирование каждого столбца во временный массив
+			 * "UKFSIF_STEP2_CHI_MINUS_STATE_TEMP" размерностью (Lx2L+1)
+			 * для дальнейшего использования на "Step3 Calculate cross-covariance
+			 * of state and output" */
+			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory_TEMP]->pData[i * j] =
+				pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory]->pData[j];
+		}
+
+		/* Транспонирование */
+		UKFMO_MatrixTranspose(
+			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory],
+			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory_TRANPOSE]);
+
+		/* Умножение вектор-столбца на его транспонированную версию */
+		UKFMO_MatrixMultiplication(
+			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory],
+			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory_TRANPOSE],
+			pData_s->pMatrix_a[UKFSIF_STEP2_RESULT_OF_MULT_2_MATRIX]);
+
+		/* Умножение матрицы LxL на скаляр весового коэффициента */
+		UKFMO_MatrixMultScale(
+			pData_s->pMatrix_a[UKFSIF_STEP2_RESULT_OF_MULT_2_MATRIX],
+			pData_s->pMatrix_a[UKFSIF_STEP2_MUCOV]->pData[i],
+			pData_s->pMatrix_a[UKFSIF_STEP2_RESULT_OF_MULT_2_MATRIX]);
+
+		/* Сложить с предыдущим результатом */
+		UKMO_MatrixAdition(
+			pData_s->pMatrix_a[UKFSIF_STEP2_P_apriory],
+			pData_s->pMatrix_a[UKFSIF_STEP2_RESULT_OF_MULT_2_MATRIX],
+			pData_s->pMatrix_a[UKFSIF_STEP2_P_apriory]);
+	}
+
 }
 /*#### |End  | <-- Секция - "Описание глобальных функций" ####################*/
 
