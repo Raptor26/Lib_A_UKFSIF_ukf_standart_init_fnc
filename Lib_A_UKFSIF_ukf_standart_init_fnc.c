@@ -254,10 +254,76 @@ UKFSIF_Init_SetMatrixPointers(
 	ukfsif_all_data_s 		*pData_s,
 	ukfsif_all_data_init_s 	*pInit_s)
 {
+	size_t notInitMatrixIndexNumb = SIZE_MAX;
+
+	/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */
+	/* Инициализация матриц для Step 2 Calculate mean of predicted state */
+	pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_sigma_apriori] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_apriori]);
+
+	pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_muMean] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_muMean]);
+
+	pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_vect_apriori] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_x_apriori]);
+
+	/* Проверка, а все ли матрицы инициализированы */
+	notInitMatrixIndexNumb =
+		UKFSIF_CheckStruct(
+			pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[0u],
+			UKFSIF_CALC_MEAN_GENERIC_ARR_CELL_NUMB);
+	if (notInitMatrixIndexNumb != SIZE_MAX)
+	{
+		/* Если попали сюда, значит одна или несколько матриц не инициализированы
+		 * См. на значение notInitMatrixIndexNumb - это индекс неинициализированной структуры */
+		while (1);
+	}
+	/* <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+
+
+	/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */
+	/* Инициализация матриц для Step 2 Calculate covariance of predicted state  */
+	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_muCovar] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_muCovar]);
+
+	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_R]);
+
+	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_apriori]);
+
+	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_vect_apriori] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_x_apriori]);
+
+	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_chi_priory_MINUS_x_priory]);
+
+	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori_TRANSPOSE] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_chi_priory_MINUS_x_priory_TRANSPOSE]);
+
+	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_result_of_mult_2_matrix]);
+
+	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_P_apriory]);
+
+	/* Проверка, а все ли матрицы инициализированы */
+	notInitMatrixIndexNumb =
+		UKFSIF_CheckStruct(
+			pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[0u],
+			UKFSIF_CALC_COVAR_GENERIC_ARR_CELL_NUMB);
+	if (notInitMatrixIndexNumb != SIZE_MAX)
+	{
+		/* Если попали сюда, значит одна или несколько матриц не инициализированы
+		 * См. на значение notInitMatrixIndexNumb - это индекс неинициализированной структуры */
+		while (1);
+	}
+	/* <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+
 	/* Инициализация матриц для Step3 Propagate each sigma-point through observation
 	 * Матрицы и функции, используемые на этом шаге, должны быть описаны в
 	 * каждой конкретной реализации фильтра */
-	size_t notInitMatrixIndexNumb = SIZE_MAX;
+
 
 	/* Инициализация матриц для Step3 Calculate mean of predicted output */
 	pData_s->caclMeanOfPredictOut_s.meanGeneric_s.pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_sigma_apriori] =
@@ -428,7 +494,7 @@ UKFSIF_Init_SetMatrixPointers(
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
 			pData_s->updateErrCov_s.pMatrix_a[0u],
-			UKFSIF_UPDATE_STATE_ESTIMATE_ARR_CELL_UKFSIF_UPDATE_ERR_COVAR_ARR_CELL_NUMBNUMB);
+			UKFSIF_UPDATE_ERR_COVAR_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
 		/* Если попали сюда, значит одна или несколько матриц не инициализированы
@@ -507,67 +573,27 @@ UKFSIF_Init_Step2Data(
 
 void
 UKFSIF_Step2_CalculateMeanOfPredictedState(
-	ukfsif_step2_params_2l1_s *pData_s)
+	ukfsif_cacl_mean_of_predict_state_s *pData_s)
 {
-	UKFMO_MatrixMultiplication(
-		pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory],
-		pData_s->pMatrix_a[UKFSIF_STEP2_MUMEAN],
-		pData_s->pMatrix_a[UKFSIF_STEP2_x_priory]);
+	UKFSIF_CaclMeanGeneric(
+		&pData_s->meanGeneric_s);
 }
 
 void
 UKFSIF_Step2_CalculateCovarianceOfPredictedState(
-	ukfsif_step2_params_2l1_s *pData_s)
+	ukfsif_calc_covar_of_predict_state_s *pData_s)
 {
-	/* Копирование матрицы шумов в матрицу Ковариации "P_k|k-1" */
+	/* Копирование матрицы шумов Q в матрицу "P_k|k-1" до вызова функции
+	 * расчета ковариации */
 	memcpy(
-		(void*) pData_s->pMatrix_a[UKFSIF_STEP2_P_apriory]->pData,
-		(void*) pData_s->pMatrix_a[UKFSIF_STEP2_Q]->pData,
-		pData_s->stateLen * ((pData_s->stateLen * 2) + 1u));
+		(void*) pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
+		(void*) pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q],
+		(size_t) pData_s->covarGeneric_s.stateLen
+		* (pData_s->covarGeneric_s.stateLen * 2u + 1u));
 
-	size_t i, j;
-	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); j++)
-	{
-		/* Найти разницу между вектор-столбцом пространства состояний и
-		 * вектор-столбцом матрицы Сигма-точек */
-		for (j = 0u; j < pData_s->stateLen; j++)
-		{
-			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory]->pData[j] =
-				pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory]->pData[j * i]
-				- pData_s->pMatrix_a[UKFSIF_STEP2_x_priory]->pData[j * pData_s->stateLen];
-
-			/* Копирование каждого столбца во временный массив
-			 * "UKFSIF_STEP2_CHI_MINUS_STATE_TEMP" размерностью (Lx2L+1)
-			 * для дальнейшего использования на "Step3 Calculate cross-covariance
-			 * of state and output" */
-			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory_TEMP]->pData[i * j] =
-				pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory]->pData[j];
-		}
-
-		/* Транспонирование */
-		UKFMO_MatrixTranspose(
-			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory],
-			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory_TRANPOSE]);
-
-		/* Умножение вектор-столбца на его транспонированную версию */
-		UKFMO_MatrixMultiplication(
-			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory],
-			pData_s->pMatrix_a[UKFSIF_STEP2_chi_priory_MINUS_x_priory_TRANPOSE],
-			pData_s->pMatrix_a[UKFSIF_STEP2_RESULT_OF_MULT_2_MATRIX]);
-
-		/* Умножение матрицы LxL на скаляр весового коэффициента */
-		UKFMO_MatrixMultScale(
-			pData_s->pMatrix_a[UKFSIF_STEP2_RESULT_OF_MULT_2_MATRIX],
-			pData_s->pMatrix_a[UKFSIF_STEP2_MUCOV]->pData[i],
-			pData_s->pMatrix_a[UKFSIF_STEP2_RESULT_OF_MULT_2_MATRIX]);
-
-		/* Сложить с предыдущим результатом */
-		UKMO_MatrixAdition(
-			pData_s->pMatrix_a[UKFSIF_STEP2_P_apriory],
-			pData_s->pMatrix_a[UKFSIF_STEP2_RESULT_OF_MULT_2_MATRIX],
-			pData_s->pMatrix_a[UKFSIF_STEP2_P_apriory]);
-	}
-
+	/* Вызов функции расчета ковариации */
+	UKFSIF_CalcCovarGeneric(
+		&pData_s->covarGeneric_s);
 }
 
 void
@@ -630,11 +656,10 @@ UKFSIF_Step3_CalculateCovarianceOfPredictedOutputAndCrossCovariance(
 	ukfsif_all_data_s *pData_s)
 {
 	/* Calculate covariance of predicted output -->>>>>>>>>>>>>>>>>>>>>>>>>>> */
-
 	/* Скопировать матрицу шумов в матрицу Ковариации */
 	memcpy(
 		(void*) pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
-		(void*) pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R],
+		(void*) pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q],
 		(size_t) pData_s->caclCovarOfPredictOut_s.covarGeneric_s.stateLen
 		* (pData_s->caclCovarOfPredictOut_s.covarGeneric_s.stateLen * 2u + 1u));
 
