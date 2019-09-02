@@ -146,6 +146,13 @@ typedef enum
 	UKFSIF_INIT_chi_predict,
 
 	/*------------------------------------------------------------------------*//**
+	 * @brief Временная матрицы для шага "Calculate the sigma-points"
+	 * 
+	 * Размерность LxL
+	 */
+	// UKFSIF_INIT_chi_predictTemp,
+
+	/*------------------------------------------------------------------------*//**
 	 * @brief  Матрица Ковариации chi_k|k-1
 	 *
 	 * Размерность: Lx(2*L+1)
@@ -607,6 +614,24 @@ typedef enum
 	UKFSIF_UPDATE_ERR_COVAR_ARR_CELL_NUMB,
 } ukfsif_update_err_covar_e;
 
+typedef enum
+{
+
+	UKFSIF_CALC_THE_SIGMA_POINTS_x_predict = 0u,
+
+	UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP,
+
+
+	/*------------------------------------------------------------------------*//**
+	 * @brief  
+	 * 
+	 * Размерность "Lx(2L+1)"
+	 */
+	UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict,
+
+	UKFSIF_CALC_THE_SIGMA_POINTS_ARR_CELL_NUMB,
+} ukfsif_calc_the_sigma_points_e;
+
 /*-------------------------------------------------------------------------*//**
  * @brief Коэффициенты для распределения сигма-точек
  */
@@ -721,21 +746,29 @@ typedef struct
 
 typedef struct
 {
-	ukfsif_update_err_covar_s 	updateErrCov_s;
+	uint16_t stateLen;
+	ukfmo_matrix_s *pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_ARR_CELL_NUMB];
+} ukfsif_calc_the_sigma_points_s;
 
-	ukfsif_update_state_s 		updateState_s;
+typedef struct
+{
+	ukfsif_update_err_covar_s 						updateErrCov_s;
 
-	ukfsif_calc_kalman_gain_s 	calcKalmanGain_s;
+	ukfsif_update_state_s 							updateState_s;
 
-	ukfsif_calc_mean_of_predict_output_s caclMeanOfPredictOut_s;
+	ukfsif_calc_kalman_gain_s 						calcKalmanGain_s;
 
-	ukfsif_calc_covar_of_predict_output_s caclCovarOfPredictOut_s;
+	ukfsif_calc_mean_of_predict_output_s 			caclMeanOfPredictOut_s;
 
-	ukfsif_calc_cross_covar_of_state_and_output_s calcCrossCovarOfStateAndOut_s;
+	ukfsif_calc_covar_of_predict_output_s 			caclCovarOfPredictOut_s;
 
-	ukfsif_cacl_mean_of_predict_state_s calcMeanOfPredictState_s;
+	ukfsif_calc_cross_covar_of_state_and_output_s 	calcCrossCovarOfStateAndOut_s;
 
-	ukfsif_calc_covar_of_predict_state_s calcCovarOfPredictState_s;
+	ukfsif_cacl_mean_of_predict_state_s 			calcMeanOfPredictState_s;
+
+	ukfsif_calc_covar_of_predict_state_s 			calcCovarOfPredictState_s;
+
+	ukfsif_calc_the_sigma_points_s 					calcTheSigmaPoints_s;
 } ukfsif_all_data_s;
 
 typedef struct

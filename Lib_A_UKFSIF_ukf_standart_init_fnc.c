@@ -257,6 +257,30 @@ UKFSIF_Init_SetMatrixPointers(
 	size_t notInitMatrixIndexNumb = SIZE_MAX;
 
 	/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */
+	/* Инициализация матриц для Step 1 Calculate the sigma-points */
+	pData_s->calcTheSigmaPoints_s.pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_x_posteriori]);
+
+	pData_s->calcTheSigmaPoints_s.pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_P_sqrt]);
+
+	pData_s->calcTheSigmaPoints_s.pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_predict]);
+
+	/* Проверка, а все ли матрицы инициализированы */
+	notInitMatrixIndexNumb =
+		UKFSIF_CheckStruct(
+			pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[0u],
+			UKFSIF_CALC_THE_SIGMA_POINTS_ARR_CELL_NUMB);
+	if (notInitMatrixIndexNumb != SIZE_MAX)
+	{
+		/* Если попали сюда, значит одна или несколько матриц не инициализированы
+		 * См. на значение notInitMatrixIndexNumb - это индекс неинициализированной структуры */
+		while (1);
+	}
+	/* <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+
+	/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */
 	/* Инициализация матриц для Step 2 Calculate mean of predicted state */
 	pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_sigma_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_apriori]);
@@ -567,6 +591,47 @@ UKFSIF_Init_Step2Data(
 		{
 			/* Зависнуть */
 			while (1);
+		}
+	}
+}
+
+void
+UKFSIF_Step1_CalculateTheSigmaPoints(
+	ukfsif_calc_the_sigma_points_s 	*pData_s,
+	__UKFSIF_FPT__ 					sqrtLAndLambda)
+{
+	/* Заполнить первый столбец матрицы Сигма-точек */
+	size_t j, i;
+	for (j = 0u; (j < pData_s->stateLen); j++)
+	{
+		pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[j * (pData_s->stateLen * 2u + 1u)] =
+			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict]->pData[j];
+	}
+
+	UKFMO_MatrixMultScale(
+		pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP],
+		sqrtLAndLambda,
+		pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]);
+
+	size_t jIdx = 0u, iIdx = 1u;
+	for (j = 0u; j < pData_s->stateLen; j++)
+	{
+		for (i = 0u; i < pData_s->stateLen; i++)
+		{
+			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[jIdx * iIdx] =
+				pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict]->pData[j * i]
+				+ pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]->pData[j * i];
+
+			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[jIdx * (iIdx + pData_s->stateLen)] =
+				pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict]->pData[j * i]
+				+ pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]->pData[j * i];
+
+			iIdx++;
+			if (iIdx >= ( pData_s->stateLen + 1u))
+			{
+				iIdx = 1u;
+				jIdx++;
+			}
 		}
 	}
 }
