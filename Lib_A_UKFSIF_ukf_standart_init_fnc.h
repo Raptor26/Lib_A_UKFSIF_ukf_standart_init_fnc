@@ -33,6 +33,9 @@
 
 
 /*#### |Begin| --> Секция - "Определение констант" ###########################*/
+#if defined (__UKFSIF_EXTERN_MODE_ENABLE__)
+    #include "macros_definitions.h"
+#endif
 
 /*==== |Begin| --> Секция определения типа числа с плавающей точкой ==========*/
 #if !defined (__UKFSIF_FPT__)
@@ -81,6 +84,44 @@
 	#define __UKFSIF_ALWAYS_INLINE
 #endif
 /*==== |End  | <-- Секция - Макросы для встраиваемых функций =================*/
+
+/*==== |Begin| --> Секция - Расположение функций библиотеки в специальной
+ *                          области памяти ===================================*/
+#if defined (__UKFSIF_FNC_ONCE_MEMORY_LOCATION_NAME__)
+  #if defined (__GNUC__)
+    #define __UKFSIF_FNC_ONCE_MEMORY_LOCATION  __attribute__ ((section(__UKFSIF_FNC_ONCE_MEMORY_LOCATION_NAME__)))
+  #else
+    #error "You defined the name of the memory area for the function location, but the type of your compiler is not supported by the library. You can delete the macro definition __UKFSIF_FNC_ONCE_MEMORY_LOCATION_NAME__ or extend the macro definition __UKFSIF_FNC_ONCE_MEMORY_LOCATION for your compiler type"
+  #endif
+#else
+  #define __UKFSIF_FNC_ONCE_MEMORY_LOCATION
+#endif
+
+#if defined (__UKFSIF_FNC_LOOP_MEMORY_LOCATION_NAME__)
+  #if defined (__GNUC__)
+    #define __UKFSIF_FNC_LOOP_MEMORY_LOCATION  __attribute__ ((section(__UKFSIF_FNC_LOOP_MEMORY_LOCATION_NAME__)))
+  #else
+    #error "You defined the name of the memory area for the function location, but the type of your compiler is not supported by the library. You can delete the macro definition __UKFSIF_FNC_LOOP_MEMORY_LOCATION_NAME__ or extend the macro definition __UKFSIF_FNC_LOOP_MEMORY_LOCATION for your compiler type"
+  #endif
+#else
+  #define __UKFSIF_FNC_LOOP_MEMORY_LOCATION
+#endif
+/*==== |End  | <-- Секция - Расположение функций библиотеки в специальной
+ *                          области памяти ===================================*/
+
+/*==== |Begin| --> Секция - Локальная оптимизация функций ====================*/
+#if defined (__GNUC__)
+    #ifndef __UKFSIF_FNC_ONCE_OPTIMIZE_MODE
+        #define __UKFSIF_FNC_ONCE_OPTIMIZE_MODE
+    #endif
+#endif
+
+#if defined (__GNUC__)
+    #ifndef __UKFSIF_FNC_LOOP_OPTIMIZE_MODE
+        #define __UKFSIF_FNC_LOOP_OPTIMIZE_MODE
+    #endif
+#endif
+/*==== |End| --> Секция - Локальная оптимизация функций ======================*/
 
 /*#### |End  | <-- Секция - "Определение констант" ###########################*/
 
@@ -206,7 +247,7 @@ typedef enum
 	/*------------------------------------------------------------------------*//**
 	 * @brief  Вектор
 	 *
-	 * Размерность: LxL
+	 * Размерность: Lx1
 	 */
 	UKFSIF_INIT_innovation,
 
@@ -492,7 +533,7 @@ typedef enum
 	 *
 	 * @note  	Размерность: "Lx(2L+1)"
 	 */
-	UKFSIF_CALC_MEAN_GENERIC_sigma_apriori = 1u,
+	UKFSIF_CALC_MEAN_GENERIC_sigma_apriori = 0u,
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief Вектор-столбец для хранения весовых коэффициентов
@@ -821,6 +862,16 @@ UKFSIF_CalculateTheSigmaPoints_2L1(
 );
 
 extern void
+UKFIS_StructInit(
+	ukfsif_all_data_init_s *pInit_s);
+
+extern void
+UKFSIF_Init_SetMatrixPointers(
+	ukfsif_all_data_s 		*pData_s,
+	ukfsif_all_data_init_s 	*pInit_s,
+	uint16_t 				stateLen);
+
+extern void
 UKFSIF_Step3_CalculateCrossCovarOfStateAndOut(
 	ukfsif_calc_cross_covar_of_state_and_output_s *pData_s);
 
@@ -835,7 +886,7 @@ UKFSIF_CaclMeanGeneric(
 
 
 /*#### |Begin| --> Секция - "Определение макросов" ###########################*/
-__UKFSIF_ALWAYS_INLINE ukfmo_matrix_s*
+__UKFSIF_ALWAYS_INLINE ukfmo_matrix_s* __UKFSIF_FNC_LOOP_OPTIMIZE_MODE
 __UKFSIF_CheckMatrixStructValidation(
 	ukfmo_matrix_s *pData)
 {

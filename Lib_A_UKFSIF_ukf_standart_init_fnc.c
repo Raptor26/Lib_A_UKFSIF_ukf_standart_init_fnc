@@ -227,9 +227,11 @@ UKFIS_StructInit(
 	for (i = 0u; i < UKFSIF_INIT_ARR_CELL_NUMB; i++)
 	{
 		/* Сброс параметров структуры в значения по умолчанию */
-		pInit_s->pMatrix_s_a[i]->numCols 	= 0u;
-		pInit_s->pMatrix_s_a[i]->numRows 	= 0u;
-		pInit_s->pMatrix_s_a[i]->pData 		= NULL;
+//		pInit_s->pMatrix_s_a[i]->numCols 	= 0u;
+//		pInit_s->pMatrix_s_a[i]->numRows 	= 0u;
+//		pInit_s->pMatrix_s_a[i]->pData 		= NULL;
+
+		pInit_s->pMatrix_s_a[i] = NULL;
 	}
 }
 
@@ -246,13 +248,14 @@ UKFSIF_CheckStruct(
 			return (i);
 		}
 	}
-	return (0xFFFF);
+	return (SIZE_MAX);
 }
 
 void
 UKFSIF_Init_SetMatrixPointers(
 	ukfsif_all_data_s 		*pData_s,
-	ukfsif_all_data_init_s 	*pInit_s)
+	ukfsif_all_data_init_s 	*pInit_s,
+	uint16_t 				stateLen)
 {
 	size_t notInitMatrixIndexNumb = SIZE_MAX;
 
@@ -267,10 +270,12 @@ UKFSIF_Init_SetMatrixPointers(
 	pData_s->calcTheSigmaPoints_s.pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_predict]);
 
+	pData_s->calcTheSigmaPoints_s.stateLen = stateLen;
+
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[0u],
+			pData_s->calcTheSigmaPoints_s.pMatrix_a[0u],
 			UKFSIF_CALC_THE_SIGMA_POINTS_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -290,6 +295,8 @@ UKFSIF_Init_SetMatrixPointers(
 
 	pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_vect_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_x_apriori]);
+
+	pData_s->calcMeanOfPredictState_s.meanGeneric_s.stateLen = stateLen;
 
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
@@ -331,6 +338,8 @@ UKFSIF_Init_SetMatrixPointers(
 	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_P_apriory]);
 
+	pData_s->calcCovarOfPredictState_s.covarGeneric_s.stateLen = stateLen;
+
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
@@ -358,6 +367,8 @@ UKFSIF_Init_SetMatrixPointers(
 
 	pData_s->caclMeanOfPredictOut_s.meanGeneric_s.pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_vect_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_y_apriori]);
+
+	pData_s->caclMeanOfPredictOut_s.meanGeneric_s.stateLen = stateLen;
 
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
@@ -393,6 +404,8 @@ UKFSIF_Init_SetMatrixPointers(
 
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_Pyy]);
+
+	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.stateLen = stateLen;
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
@@ -434,6 +447,8 @@ UKFSIF_Init_SetMatrixPointers(
 	pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_Pxy] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_Pxy]);
 
+	pData_s->calcCrossCovarOfStateAndOut_s.stateLen = stateLen;
+
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
 			pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[0u],
@@ -458,6 +473,8 @@ UKFSIF_Init_SetMatrixPointers(
 
 	pData_s->calcKalmanGain_s.pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_K] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_K]);
+
+	pData_s->calcKalmanGain_s.stateLen = stateLen;
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
@@ -488,6 +505,9 @@ UKFSIF_Init_SetMatrixPointers(
 
 	pData_s->updateState_s.pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_innovation]);
+
+	pData_s->updateState_s.stateLen = stateLen;
+
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
 			pData_s->updateState_s.pMatrix_a[0u],
@@ -515,6 +535,9 @@ UKFSIF_Init_SetMatrixPointers(
 
 	pData_s->updateErrCov_s.pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_Pyy] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_Pyy]);
+
+	pData_s->updateErrCov_s.stateLen = stateLen;
+
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
 			pData_s->updateErrCov_s.pMatrix_a[0u],
