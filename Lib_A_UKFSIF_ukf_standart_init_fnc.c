@@ -82,7 +82,7 @@ UKFSIF_InitWeightVectorMean(
 	size_t j;
 	__UKFSIF_FPT__ eta_meanAndCovar =
 		((__UKFSIF_FPT__) 1.0) / (((__UKFSIF_FPT__)2.0) * (((__UKFSIF_FPT__) vectLen) + lambda));
-	for (j = 1u; j < vectLen * 2u; j++)
+	for (j = 1u; j < (vectLen * 2u + 1u); j++)
 	{
 		pWeightMean[j] = eta_meanAndCovar;
 	}
@@ -327,13 +327,13 @@ UKFSIF_Init_SetMatrixPointers(
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_x_apriori]);
 
 	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_chi_priory_MINUS_x_priory]);
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_priory_MINUS_x_priory]);
 
 	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori_TRANSPOSE] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_chi_priory_MINUS_x_priory_TRANSPOSE]);
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_priory_MINUS_x_priory_TRANSPOSE]);
 
 	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_result_of_mult_2_matrix]);
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_result_of_mult_2_matrix]);
 
 	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_P_apriory]);
@@ -394,13 +394,13 @@ UKFSIF_Init_SetMatrixPointers(
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_y_apriori]);
 
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_chi_priory_MINUS_x_priory]);
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_priory_MINUS_x_priory]);
 
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori_TRANSPOSE] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_chi_priory_MINUS_x_priory_TRANSPOSE]);
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_priory_MINUS_x_priory_TRANSPOSE]);
 
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_result_of_mult_2_matrix]);
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_result_of_mult_2_matrix]);
 
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_Pyy]);
@@ -436,13 +436,13 @@ UKFSIF_Init_SetMatrixPointers(
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_y_apriori]);
 
 	pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_chi_apriori_MINUS_x_apriori] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_chi_priory_MINUS_x_priory]);
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_priory_MINUS_x_priory]);
 
 	pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_psi_apriori_MINUS_y_apriori_TRANSPOSE] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_psi_priory_MINUS_y_priory]);
 
 	pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_mult_2_matrix] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_result_of_mult_2_matrix]);
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_result_of_mult_2_matrix]);
 
 	pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_Pxy] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_Pxy]);
@@ -686,12 +686,10 @@ UKFSIF_Step2_CalculateCovarianceOfPredictedState(
 
 void
 UKFSIF_Step3_CalculateMeanOfPredictedOutput(
-	ukfsif_step3_params_2l1_s *pData_s)
+	ukfsif_calc_mean_of_predict_output_s *pData_s)
 {
-	UKFMO_MatrixMultiplication(
-		pData_s->pMatrix_a[UKFSIF_STEP3_psi_apriori],
-		pData_s->pMatrix_a[UKFSIF_STEP3_MUMEAN],
-		pData_s->pMatrix_a[UKFSIF_STEP3_y_apriori]);
+	UKFSIF_CaclMeanGeneric(
+		&pData_s->meanGeneric_s);
 }
 
 void
@@ -740,16 +738,26 @@ UKFSIF_Step3_CalculateCrossCovarOfStateAndOut(
 }
 
 void
+UKFSIF_Step3_CalculateCovarianceOfPredictedOutput(
+	ukfsif_calc_covar_of_predict_output_s *pData_s)
+{
+	UKFMO_CopyMatrix(
+		pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
+		pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q]);
+
+	UKFSIF_CalcCovarGeneric(
+		&pData_s->covarGeneric_s);
+}
+
+void
 UKFSIF_Step3_CalculateCovarianceOfPredictedOutputAndCrossCovariance(
 	ukfsif_all_data_s *pData_s)
 {
 	/* Calculate covariance of predicted output -->>>>>>>>>>>>>>>>>>>>>>>>>>> */
 	/* Скопировать матрицу шумов в матрицу Ковариации */
-	memcpy(
-		(void*) pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
-		(void*) pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q],
-		(size_t) pData_s->caclCovarOfPredictOut_s.covarGeneric_s.stateLen
-		* (pData_s->caclCovarOfPredictOut_s.covarGeneric_s.stateLen * 2u + 1u));
+	UKFMO_CopyMatrix(
+		pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
+		pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q]);
 
 	/* Рассчитать ковариацию */
 	UKFSIF_CalcCovarGeneric(

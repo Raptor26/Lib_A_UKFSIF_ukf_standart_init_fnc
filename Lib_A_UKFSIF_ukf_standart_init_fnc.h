@@ -34,7 +34,7 @@
 
 /*#### |Begin| --> Секция - "Определение констант" ###########################*/
 #if defined (__UKFSIF_EXTERN_MODE_ENABLE__)
-    #include "macros_definitions.h"
+	#include "macros_definitions.h"
 #endif
 
 /*==== |Begin| --> Секция определения типа числа с плавающей точкой ==========*/
@@ -88,38 +88,38 @@
 /*==== |Begin| --> Секция - Расположение функций библиотеки в специальной
  *                          области памяти ===================================*/
 #if defined (__UKFSIF_FNC_ONCE_MEMORY_LOCATION_NAME__)
-  #if defined (__GNUC__)
-    #define __UKFSIF_FNC_ONCE_MEMORY_LOCATION  __attribute__ ((section(__UKFSIF_FNC_ONCE_MEMORY_LOCATION_NAME__)))
-  #else
-    #error "You defined the name of the memory area for the function location, but the type of your compiler is not supported by the library. You can delete the macro definition __UKFSIF_FNC_ONCE_MEMORY_LOCATION_NAME__ or extend the macro definition __UKFSIF_FNC_ONCE_MEMORY_LOCATION for your compiler type"
-  #endif
+	#if defined (__GNUC__)
+		#define __UKFSIF_FNC_ONCE_MEMORY_LOCATION  __attribute__ ((section(__UKFSIF_FNC_ONCE_MEMORY_LOCATION_NAME__)))
+	#else
+		#error "You defined the name of the memory area for the function location, but the type of your compiler is not supported by the library. You can delete the macro definition __UKFSIF_FNC_ONCE_MEMORY_LOCATION_NAME__ or extend the macro definition __UKFSIF_FNC_ONCE_MEMORY_LOCATION for your compiler type"
+	#endif
 #else
-  #define __UKFSIF_FNC_ONCE_MEMORY_LOCATION
+	#define __UKFSIF_FNC_ONCE_MEMORY_LOCATION
 #endif
 
 #if defined (__UKFSIF_FNC_LOOP_MEMORY_LOCATION_NAME__)
-  #if defined (__GNUC__)
-    #define __UKFSIF_FNC_LOOP_MEMORY_LOCATION  __attribute__ ((section(__UKFSIF_FNC_LOOP_MEMORY_LOCATION_NAME__)))
-  #else
-    #error "You defined the name of the memory area for the function location, but the type of your compiler is not supported by the library. You can delete the macro definition __UKFSIF_FNC_LOOP_MEMORY_LOCATION_NAME__ or extend the macro definition __UKFSIF_FNC_LOOP_MEMORY_LOCATION for your compiler type"
-  #endif
+	#if defined (__GNUC__)
+		#define __UKFSIF_FNC_LOOP_MEMORY_LOCATION  __attribute__ ((section(__UKFSIF_FNC_LOOP_MEMORY_LOCATION_NAME__)))
+	#else
+		#error "You defined the name of the memory area for the function location, but the type of your compiler is not supported by the library. You can delete the macro definition __UKFSIF_FNC_LOOP_MEMORY_LOCATION_NAME__ or extend the macro definition __UKFSIF_FNC_LOOP_MEMORY_LOCATION for your compiler type"
+	#endif
 #else
-  #define __UKFSIF_FNC_LOOP_MEMORY_LOCATION
+	#define __UKFSIF_FNC_LOOP_MEMORY_LOCATION
 #endif
 /*==== |End  | <-- Секция - Расположение функций библиотеки в специальной
  *                          области памяти ===================================*/
 
 /*==== |Begin| --> Секция - Локальная оптимизация функций ====================*/
 #if defined (__GNUC__)
-    #ifndef __UKFSIF_FNC_ONCE_OPTIMIZE_MODE
-        #define __UKFSIF_FNC_ONCE_OPTIMIZE_MODE
-    #endif
+	#ifndef __UKFSIF_FNC_ONCE_OPTIMIZE_MODE
+		#define __UKFSIF_FNC_ONCE_OPTIMIZE_MODE
+	#endif
 #endif
 
 #if defined (__GNUC__)
-    #ifndef __UKFSIF_FNC_LOOP_OPTIMIZE_MODE
-        #define __UKFSIF_FNC_LOOP_OPTIMIZE_MODE
-    #endif
+	#ifndef __UKFSIF_FNC_LOOP_OPTIMIZE_MODE
+		#define __UKFSIF_FNC_LOOP_OPTIMIZE_MODE
+	#endif
 #endif
 /*==== |End| --> Секция - Локальная оптимизация функций ======================*/
 
@@ -188,7 +188,7 @@ typedef enum
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief Временная матрицы для шага "Calculate the sigma-points"
-	 * 
+	 *
 	 * Размерность LxL
 	 */
 	// UKFSIF_INIT_chi_predictTemp,
@@ -256,7 +256,7 @@ typedef enum
 	 *
 	 * Размерность: Lx1
 	 */
-	UKFSIF_INIT_STEP2_chi_priory_MINUS_x_priory,
+	UKFSIF_INIT_chi_priory_MINUS_x_priory,
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief  Вектор
@@ -270,7 +270,7 @@ typedef enum
 	 *
 	 * Размерность: 1xL
 	 */
-	UKFSIF_INIT_STEP2_chi_priory_MINUS_x_priory_TRANSPOSE,
+	UKFSIF_INIT_chi_priory_MINUS_x_priory_TRANSPOSE,
 
 	/* @todo получится ли использовать эту матрицу на следующих шагах:
 	 * - Calculate covariance of predicted state
@@ -279,7 +279,7 @@ typedef enum
 	 *
 	 * Размерность LxL
 	 */
-	UKFSIF_INIT_STEP2_result_of_mult_2_matrix,
+	UKFSIF_INIT_result_of_mult_2_matrix,
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief
@@ -664,8 +664,8 @@ typedef enum
 
 
 	/*------------------------------------------------------------------------*//**
-	 * @brief  
-	 * 
+	 * @brief
+	 *
 	 * Размерность "Lx(2L+1)"
 	 */
 	UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict,
@@ -872,8 +872,29 @@ UKFSIF_Init_SetMatrixPointers(
 	uint16_t 				stateLen);
 
 extern void
+UKFSIF_Step1_CalculateTheSigmaPoints(
+	ukfsif_calc_the_sigma_points_s 	*pData_s,
+	__UKFSIF_FPT__ 					sqrtLAndLambda);
+
+extern void
+UKFSIF_Step2_CalculateCovarianceOfPredictedState(
+	ukfsif_calc_covar_of_predict_state_s *pData_s);
+
+extern void
+UKFSIF_Step2_CalculateMeanOfPredictedState(
+	ukfsif_cacl_mean_of_predict_state_s *pData_s);
+
+extern void
+UKFSIF_Step3_CalculateMeanOfPredictedOutput(
+	ukfsif_calc_mean_of_predict_output_s *pData_s);
+
+extern void
 UKFSIF_Step3_CalculateCrossCovarOfStateAndOut(
 	ukfsif_calc_cross_covar_of_state_and_output_s *pData_s);
+
+extern void
+UKFSIF_Step3_CalculateCovarianceOfPredictedOutput(
+	ukfsif_calc_covar_of_predict_output_s *pData_s);
 
 extern void
 UKFSIF_CalcCovarGeneric(
@@ -882,6 +903,18 @@ UKFSIF_CalcCovarGeneric(
 extern void
 UKFSIF_CaclMeanGeneric(
 	ukfsif_calc_mean_generic_s *pData_s);
+
+extern void
+UKFSIF_Step4_CalcKalmanGain(
+	ukfsif_calc_kalman_gain_s *pData_s);
+
+extern void
+UKFSIF_Step4_UpdateStateEstimate(
+	ukfsif_update_state_s *pData_s);
+
+extern void
+UKFSIF_Step4_UpdateErrorCovariance(
+	ukfsif_update_err_covar_s *pData_s);
 /*#### |End  | <-- Секция - "Прототипы глобальных функций" ###################*/
 
 
