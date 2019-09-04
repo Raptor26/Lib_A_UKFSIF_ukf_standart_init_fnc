@@ -427,6 +427,9 @@ UKFSIF_Init_SetMatrixPointers(
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_muCovar] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_muCovar]);
 
+	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_R]);
+
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_psi_apriori]);
 
@@ -795,7 +798,7 @@ UKFSIF_Step3_CalculateCrossCovarOfStateAndOut(
 		pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_Pxy]);
 
 	size_t i, j;
-	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); j++)
+	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); i++)
 	{
 		for (j = 0u; j < pData_s->stateLen; j++)
 		{
@@ -891,7 +894,7 @@ UKFSIF_CalcCovarGeneric(
 	ukfsif_calc_covar_generic_s *pData_s)
 {
 	size_t i, j;
-	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); j++)
+	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); i++)
 	{
 		/* Найти разницу между вектор-столбцом пространства состояний и
 		 * вектор-столбцом матрицы Сигма-точек */
