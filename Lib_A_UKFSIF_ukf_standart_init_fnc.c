@@ -23,7 +23,7 @@
 /*#### |Begin| --> Секция - "Прототипы локальных функций" ####################*/
 static size_t
 UKFSIF_CheckStruct(
-	ukfmo_matrix_s 	*pMatrix_s_a,
+	ukfmo_matrix_s 	*pMatrix_s_a[],
 	size_t 			matrixArrSize);
 /*#### |End  | <-- Секция - "Прототипы локальных функций" ####################*/
 
@@ -263,14 +263,13 @@ UKFIS_StructInit(
  */
 static size_t
 UKFSIF_CheckStruct(
-	ukfmo_matrix_s 	*pMatrix_s_a,
+	ukfmo_matrix_s 	*pMatrix_s_a[],
 	size_t 			matrixArrSize)
 {
 	size_t i;
 	for (i = 0u; i < matrixArrSize; i++)
 	{
-		/* @FIXME добавить инкремент указателя на массив матрицы */
-		if (__UKFMO_IsMatrixStructValid(pMatrix_s_a[i], SIZE_MAX, SIZE_MAX) != 1u)
+		if (__UKFMO_IsMatrixStructValid(pMatrix_s_a[i], UKFSIF_SIZE_MAX, UKFSIF_SIZE_MAX) != 1u)
 		{
 			return (i);
 		}
@@ -316,7 +315,7 @@ UKFSIF_Init_SetMatrixPointers(
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcTheSigmaPoints_s.pMatrix_a[0u],
+			&pData_s->calcTheSigmaPoints_s.pMatrix_a[0u],
 			UKFSIF_CALC_THE_SIGMA_POINTS_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -342,7 +341,7 @@ UKFSIF_Init_SetMatrixPointers(
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[0u],
+			&pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[0u],
 			UKFSIF_CALC_MEAN_GENERIC_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -384,7 +383,7 @@ UKFSIF_Init_SetMatrixPointers(
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[0u],
+			&pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[0u],
 			UKFSIF_CALC_COVAR_GENERIC_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -414,7 +413,7 @@ UKFSIF_Init_SetMatrixPointers(
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->caclMeanOfPredictOut_s.meanGeneric_s.pMatrix_a[0u],
+			&pData_s->caclMeanOfPredictOut_s.meanGeneric_s.pMatrix_a[0u],
 			UKFSIF_CALC_MEAN_GENERIC_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -450,7 +449,7 @@ UKFSIF_Init_SetMatrixPointers(
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[0u],
+			&pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[0u],
 			UKFSIF_CALC_COVAR_GENERIC_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -492,7 +491,7 @@ UKFSIF_Init_SetMatrixPointers(
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[0u],
+			&pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[0u],
 			UKFSIF_CALC_CROSSCOVAR_GENERIC_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -519,7 +518,7 @@ UKFSIF_Init_SetMatrixPointers(
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcKalmanGain_s.pMatrix_a[0u],
+			&pData_s->calcKalmanGain_s.pMatrix_a[0u],
 			UKFSIF_CALC_KALMAN_GAIN_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -551,7 +550,7 @@ UKFSIF_Init_SetMatrixPointers(
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->updateState_s.pMatrix_a[0u],
+			&pData_s->updateState_s.pMatrix_a[0u],
 			UKFSIF_UPDATE_STATE_ESTIMATE_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -581,7 +580,7 @@ UKFSIF_Init_SetMatrixPointers(
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->updateErrCov_s.pMatrix_a[0u],
+			&pData_s->updateErrCov_s.pMatrix_a[0u],
 			UKFSIF_UPDATE_ERR_COVAR_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{

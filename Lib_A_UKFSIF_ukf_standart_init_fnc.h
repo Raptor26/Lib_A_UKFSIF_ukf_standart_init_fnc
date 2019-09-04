@@ -933,6 +933,10 @@ __UKFSIF_CheckMatrixStructValidation(
 }
 
 #define __UKFSIF_CheckStateLen(x)
+
+#if !defined(UKFSIF_SIZE_MAX)
+#define UKFSIF_SIZE_MAX 		SIZE_MAX
+#endif
 /*#### |End  | <-- Секция - "Определение макросов" ###########################*/
 
 
