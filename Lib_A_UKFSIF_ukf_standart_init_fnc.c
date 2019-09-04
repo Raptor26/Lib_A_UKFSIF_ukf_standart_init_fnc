@@ -23,7 +23,7 @@
 /*#### |Begin| --> Секция - "Прототипы локальных функций" ####################*/
 static size_t
 UKFSIF_CheckStruct(
-	ukfmo_matrix_s 	*pMatrix_s,
+	ukfmo_matrix_s 	*pMatrix_s_a,
 	size_t 			matrixArrSize);
 /*#### |End  | <-- Секция - "Прототипы локальных функций" ####################*/
 
@@ -263,14 +263,14 @@ UKFIS_StructInit(
  */
 static size_t
 UKFSIF_CheckStruct(
-	ukfmo_matrix_s 	*pMatrix_s,
+	ukfmo_matrix_s 	*pMatrix_s_a,
 	size_t 			matrixArrSize)
 {
 	size_t i;
 	for (i = 0u; i < matrixArrSize; i++)
 	{
 		/* @FIXME добавить инкремент указателя на массив матрицы */
-		if (__UKFMO_IsMatrixStructValid(pMatrix_s, SIZE_MAX, SIZE_MAX) != 1u)
+		if (__UKFMO_IsMatrixStructValid(pMatrix_s_a[i], SIZE_MAX, SIZE_MAX) != 1u)
 		{
 			return (i);
 		}
