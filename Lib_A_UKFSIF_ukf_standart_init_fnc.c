@@ -310,6 +310,12 @@ UKFSIF_Init_SetMatrixPointers(
 	pData_s->calcTheSigmaPoints_s.pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_predict]);
 
+	pData_s->calcTheSigmaPoints_s.pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_x_LxL_TEMP]);
+
+	pData_s->calcTheSigmaPoints_s.pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_ones_TEMP] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_x_1xL_ones_TEMP]);
+
 	pData_s->calcTheSigmaPoints_s.stateLen = stateLen;
 
 	/* Проверка, а все ли матрицы инициализированы */
@@ -323,6 +329,10 @@ UKFSIF_Init_SetMatrixPointers(
 		 * См. на значение notInitMatrixIndexNumb - это индекс неинициализированной структуры */
 		while (1);
 	}
+
+	/* Заполнение единичной матрицы (необходимо для шага генерации Сигма-точек )*/
+	UKFMO_MatrixOnes(
+		pInit_s->pMatrix_s_a[UKFSIF_INIT_x_1xL_ones_TEMP]);
 	/* <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
 
 	/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */
@@ -688,6 +698,11 @@ UKFSIF_Step1_CalculateTheSigmaPoints(
 			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict]->pData[j];
 	}
 
+	UKFMO_MatrixMultiplication(
+		pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict],
+		pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_ones_TEMP],
+		pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP]);
+
 	UKFMO_MatrixMultScale(
 		pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP],
 		sqrtLAndLambda,
@@ -698,13 +713,26 @@ UKFSIF_Step1_CalculateTheSigmaPoints(
 	{
 		for (i = 0u; i < pData_s->stateLen; i++)
 		{
-			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[jIdx * iIdx] =
-				pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict]->pData[j * i]
-				+ pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]->pData[j * i];
+			size_t convertIndex_chi_predict =
+				__UKFMO_GetIndexInOneFromTwoDim(
+					pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict], jIdx, iIdx);
+			size_t convertIndex_chi_predictOfsset =
+				__UKFMO_GetIndexInOneFromTwoDim(
+					pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict], jIdx, iIdx + pData_s->stateLen);
+			size_t convertIndex_x_predict_LxL =
+				__UKFMO_GetIndexInOneFromTwoDim(
+					pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP], j, i);
+			size_t convertIndex_sqrtP =
+				__UKFMO_GetIndexInOneFromTwoDim(
+					pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP], j, i);
 
-			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[jIdx * (iIdx + pData_s->stateLen)] =
-				pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict]->pData[j * i]
-				+ pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]->pData[j * i];
+			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[convertIndex_chi_predict] =
+				pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP]->pData[convertIndex_x_predict_LxL]
+				+ pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]->pData[convertIndex_sqrtP];
+
+			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[convertIndex_chi_predictOfsset] =
+				pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP]->pData[convertIndex_x_predict_LxL]
+				- pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]->pData[convertIndex_sqrtP];
 
 			iIdx++;
 			if (iIdx >= ( pData_s->stateLen + 1u))
