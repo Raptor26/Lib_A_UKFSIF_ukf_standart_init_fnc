@@ -23,7 +23,7 @@
 /*#### |Begin| --> Секция - "Прототипы локальных функций" ####################*/
 static size_t
 UKFSIF_CheckStruct(
-	ukfmo_matrix_s 	*pMatrix_s,
+	ukfmo_matrix_s 	*pMatrix_s_a[],
 	size_t 			matrixArrSize);
 /*#### |End  | <-- Секция - "Прототипы локальных функций" ####################*/
 
@@ -219,6 +219,17 @@ UKFSIF_StructInit_Step2Data(
 	pData_s->stateLen = 0u;
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция сбрасывает массив структур указателей на матрицы
+ *
+ * @param[in] 	*pInit_s: 	Указатель на структуру, в которой содержится
+ * 							массив указателей на матрицы
+ *
+ * @return  None
+ */
 void
 UKFIS_StructInit(
 	ukfsif_all_data_init_s *pInit_s)
@@ -235,15 +246,30 @@ UKFIS_StructInit(
 	}
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция выполняет проверку массива структур на предмет инициализации
+ *
+ * @para[in]  	*pMatrix_s:   	Указатель на массив структур указателей на
+ * 								матрицы
+ * @param[in]   matrixArrSize:	Количество ячеек в массиве структур
+ * 								указателей на матрицы
+ *
+ * @return    Если все структуры инициализированы, то функция возвращает
+ *            SIZE_MAX, иначе, возвращает индекс неинициализированной
+ *            структуры в массиве
+ */
 static size_t
 UKFSIF_CheckStruct(
-	ukfmo_matrix_s 	*pMatrix_s,
+	ukfmo_matrix_s 	*pMatrix_s_a[],
 	size_t 			matrixArrSize)
 {
 	size_t i;
 	for (i = 0u; i < matrixArrSize; i++)
 	{
-		if (__UKFMO_IsMatrixStructValid(pMatrix_s, SIZE_MAX, SIZE_MAX) != 1u)
+		if (__UKFMO_IsMatrixStructValid(pMatrix_s_a[i], UKFSIF_SIZE_MAX, UKFSIF_SIZE_MAX) != 1u)
 		{
 			return (i);
 		}
@@ -251,6 +277,20 @@ UKFSIF_CheckStruct(
 	return (SIZE_MAX);
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция выполняет копирование адресов структур матриц из
+ *           структуры инициализации в структуру рабочих данных и проверяет
+ *           на корректность
+ *
+ * @param[out]	*pData_s: 	Указатель на структуру рабочих данных
+ * @param[in]	*pInit_s:  	Указатель на структуру инициализации
+ * @param[in]  	stateLen:   Длина вектора пространства состояний
+ *
+ * @return  None
+ */
 void
 UKFSIF_Init_SetMatrixPointers(
 	ukfsif_all_data_s 		*pData_s,
@@ -275,7 +315,7 @@ UKFSIF_Init_SetMatrixPointers(
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcTheSigmaPoints_s.pMatrix_a[0u],
+			&pData_s->calcTheSigmaPoints_s.pMatrix_a[0u],
 			UKFSIF_CALC_THE_SIGMA_POINTS_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -301,7 +341,7 @@ UKFSIF_Init_SetMatrixPointers(
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[0u],
+			&pData_s->calcMeanOfPredictState_s.meanGeneric_s.pMatrix_a[0u],
 			UKFSIF_CALC_MEAN_GENERIC_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -343,7 +383,7 @@ UKFSIF_Init_SetMatrixPointers(
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[0u],
+			&pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[0u],
 			UKFSIF_CALC_COVAR_GENERIC_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -373,7 +413,7 @@ UKFSIF_Init_SetMatrixPointers(
 	/* Проверка, а все ли матрицы инициализированы */
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->caclMeanOfPredictOut_s.meanGeneric_s.pMatrix_a[0u],
+			&pData_s->caclMeanOfPredictOut_s.meanGeneric_s.pMatrix_a[0u],
 			UKFSIF_CALC_MEAN_GENERIC_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -386,6 +426,9 @@ UKFSIF_Init_SetMatrixPointers(
 	/* Инициализация матриц для Step3 Calculate covariance of predicted output */
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_muCovar] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_muCovar]);
+
+	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_R]);
 
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_psi_apriori]);
@@ -409,7 +452,7 @@ UKFSIF_Init_SetMatrixPointers(
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[0u],
+			&pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[0u],
 			UKFSIF_CALC_COVAR_GENERIC_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -451,7 +494,7 @@ UKFSIF_Init_SetMatrixPointers(
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[0u],
+			&pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[0u],
 			UKFSIF_CALC_CROSSCOVAR_GENERIC_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -478,7 +521,7 @@ UKFSIF_Init_SetMatrixPointers(
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->calcKalmanGain_s.pMatrix_a[0u],
+			&pData_s->calcKalmanGain_s.pMatrix_a[0u],
 			UKFSIF_CALC_KALMAN_GAIN_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -510,7 +553,7 @@ UKFSIF_Init_SetMatrixPointers(
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->updateState_s.pMatrix_a[0u],
+			&pData_s->updateState_s.pMatrix_a[0u],
 			UKFSIF_UPDATE_STATE_ESTIMATE_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -540,7 +583,7 @@ UKFSIF_Init_SetMatrixPointers(
 
 	notInitMatrixIndexNumb =
 		UKFSIF_CheckStruct(
-			pData_s->updateErrCov_s.pMatrix_a[0u],
+			&pData_s->updateErrCov_s.pMatrix_a[0u],
 			UKFSIF_UPDATE_ERR_COVAR_ARR_CELL_NUMB);
 	if (notInitMatrixIndexNumb != SIZE_MAX)
 	{
@@ -618,6 +661,20 @@ UKFSIF_Init_Step2Data(
 	}
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция выполняет генерацию матрицы Сигма-точек (chi_predict) на основе
+ *           вектора пространства состояний (x_predict) и квадратного корня
+ *           из P (cholLow(P))
+ *
+ * @param[in,out] 	*pData_s: 	Указатель на структуру, содержащую данные для
+ * 								расчета Сигма-точек
+ * @param[in]   	sqrtLAndLambda: 	Корень квадратный из (L+Lambda)
+ *
+ * @return  None
+ */
 void
 UKFSIF_Step1_CalculateTheSigmaPoints(
 	ukfsif_calc_the_sigma_points_s 	*pData_s,
@@ -659,6 +716,16 @@ UKFSIF_Step1_CalculateTheSigmaPoints(
 	}
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция выполняет расчет вектора "среднего от предсказанного состояния"
+ *
+ * @param[in,out] *pData_s: Указатель на структуру, содержащую данные для расчета
+ *
+ * @return None
+ */
 void
 UKFSIF_Step2_CalculateMeanOfPredictedState(
 	ukfsif_cacl_mean_of_predict_state_s *pData_s)
@@ -667,6 +734,16 @@ UKFSIF_Step2_CalculateMeanOfPredictedState(
 		&pData_s->meanGeneric_s);
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция выполняет расчет вектора "Ковариации предсказанного состояния"
+ *
+ * @param[in,out] *pData_s: Указатель на структуру, содержащую данные для расчета
+ *
+ * @return None
+ */
 void
 UKFSIF_Step2_CalculateCovarianceOfPredictedState(
 	ukfsif_calc_covar_of_predict_state_s *pData_s)
@@ -684,6 +761,16 @@ UKFSIF_Step2_CalculateCovarianceOfPredictedState(
 		&pData_s->covarGeneric_s);
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция выполняет расчет вектора "среднего от предсказанного измерения"
+ *
+ * @param[in,out] *pData_s: Указатель на структуру, содержащую данные для расчета
+ *
+ * @return None
+ */
 void
 UKFSIF_Step3_CalculateMeanOfPredictedOutput(
 	ukfsif_calc_mean_of_predict_output_s *pData_s)
@@ -692,6 +779,16 @@ UKFSIF_Step3_CalculateMeanOfPredictedOutput(
 		&pData_s->meanGeneric_s);
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция выполняет расчет вектора "Кросс-ковариации от вектора состояния и предсказанного измерения"
+ *
+ * @param[in,out] *pData_s: Указатель на структуру, содержащую данные для расчета
+ *
+ * @return None
+ */
 void
 UKFSIF_Step3_CalculateCrossCovarOfStateAndOut(
 	ukfsif_calc_cross_covar_of_state_and_output_s *pData_s)
@@ -701,7 +798,7 @@ UKFSIF_Step3_CalculateCrossCovarOfStateAndOut(
 		pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_Pxy]);
 
 	size_t i, j;
-	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); j++)
+	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); i++)
 	{
 		for (j = 0u; j < pData_s->stateLen; j++)
 		{
@@ -737,6 +834,16 @@ UKFSIF_Step3_CalculateCrossCovarOfStateAndOut(
 	}
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция выполняет расчет вектора "Ковариация от предсказанного измерения"
+ *
+ * @param[in,out] *pData_s: Указатель на структуру, содержащую данные для расчета
+ *
+ * @return None
+ */
 void
 UKFSIF_Step3_CalculateCovarianceOfPredictedOutput(
 	ukfsif_calc_covar_of_predict_output_s *pData_s)
@@ -772,12 +879,22 @@ UKFSIF_Step3_CalculateCovarianceOfPredictedOutputAndCrossCovariance(
 	/* <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Универсальная функция для расчета Ковариации
+ *
+ * @param[in,out] *pData_s: Указатель на структуру, содержащую данные для расчета
+ *
+ * @return None
+ */
 void
 UKFSIF_CalcCovarGeneric(
 	ukfsif_calc_covar_generic_s *pData_s)
 {
 	size_t i, j;
-	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); j++)
+	for (i = 0u; i < ((pData_s->stateLen * 2u) + 1u); i++)
 	{
 		/* Найти разницу между вектор-столбцом пространства состояний и
 		 * вектор-столбцом матрицы Сигма-точек */
@@ -821,6 +938,16 @@ UKFSIF_CalcCovarGeneric(
 	}
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Универсальная функция для расчета "Среднего вектора"
+ *
+ * @param[in,out] *pData_s: Указатель на структуру, содержащую данные для расчета
+ *
+ * @return  None
+ */
 void
 UKFSIF_CaclMeanGeneric(
 	ukfsif_calc_mean_generic_s *pData_s)
@@ -831,6 +958,16 @@ UKFSIF_CaclMeanGeneric(
 		pData_s->pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_vect_apriori]);
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция выполняет расчет матрицы усиления
+ *
+ * @param[in,out] *pData_s: Указатель на структуру, содержащую данные для расчета
+ *
+ * @return  None
+ */
 void
 UKFSIF_Step4_CalcKalmanGain(
 	ukfsif_calc_kalman_gain_s *pData_s)
@@ -850,6 +987,18 @@ UKFSIF_Step4_CalcKalmanGain(
 
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция выполняет коррекцию вектора пространства состояний с
+ *           помощью внешнего измерителя
+ *
+ * @param[in,out] *pData_s: Указатель на структуру, содержащую данные для
+ * 							расчета
+ *
+ * @return  None
+ */
 void
 UKFSIF_Step4_UpdateStateEstimate(
 	ukfsif_update_state_s *pData_s)
@@ -875,6 +1024,17 @@ UKFSIF_Step4_UpdateStateEstimate(
 		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_x_posteriori]);
 }
 
+/*-------------------------------------------------------------------------*//**
+ * @author    Mickle Isaev
+ * @date      04-сен-2019
+ *
+ * @brief    Функция обновляет значение матрицы ковариации (P)
+ *
+ * @param[in,out] *pData_s: Указатель на структуру, содержащую данные для
+ * 							расчета
+ *
+ * @return  None
+ */
 void
 UKFSIF_Step4_UpdateErrorCovariance(
 	ukfsif_update_err_covar_s *pData_s)
