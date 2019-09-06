@@ -258,7 +258,7 @@ typedef enum
 	 *
 	 * Размерность:  Lx1
 	 */
-	UKFSIF_INIT_meas,
+	UKFSIF_INIT_y_posteriori,
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief  Вектор
@@ -616,7 +616,7 @@ typedef enum
 	 *
 	 * @note  Размерность: "Lx1"
 	 */
-	UKFSIF_UPDATE_STATE_ESTIMATE_meas,
+	UKFSIF_UPDATE_STATE_ESTIMATE_y_posteriori,
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief  Вектор-столбец инновации
@@ -812,7 +812,7 @@ typedef struct
 {
 	uint16_t stateLen;
 
-	ukfmo_matrix_s *pMatrix_a[];
+	ukfmo_matrix_s *pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_ARR_CELL_NUMB];
 } ukfsif_update_err_covar_s;
 
 typedef struct

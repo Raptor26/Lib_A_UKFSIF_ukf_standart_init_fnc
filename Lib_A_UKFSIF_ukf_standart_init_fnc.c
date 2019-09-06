@@ -553,8 +553,8 @@ UKFSIF_Init_SetMatrixPointers(
 	pData_s->updateState_s.pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_y_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_y_apriori]);
 
-	pData_s->updateState_s.pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_meas] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_meas]);
+	pData_s->updateState_s.pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_y_posteriori] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_y_posteriori]);
 
 	pData_s->updateState_s.pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_innovation]);
@@ -1034,8 +1034,8 @@ UKFSIF_Step4_UpdateStateEstimate(
 	/* Найти Инновацию, т.е. разницу между вектором измерений и его
 	 * предсказанным значением */
 	UKMO_MatrixSubstraction(
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_meas],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_x_apriori],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_y_posteriori],
+		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_y_apriori],
 		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation]);
 
 	/* Умножить матрицу усиления на Инновацию */
