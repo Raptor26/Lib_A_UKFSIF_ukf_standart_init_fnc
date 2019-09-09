@@ -220,8 +220,24 @@ typedef enum
 	 * 			шага генерации Сигма-точек)
 	 *
 	 * Размерность LxL
+	 *
+	 * @warning Удалить
 	 */
 	UKFSIF_INIT_x_LxL,
+
+	/*------------------------------------------------------------------------*//**
+	 * @brief Это вспомогательная матрица для вычисления распределения Сигма-точек
+	 *
+	 * Размерность LxL
+	 */
+	UKFSIF_INIT_x_LxL_TEMP,
+
+	/*------------------------------------------------------------------------*//**
+	 * @brief Это вспомогательная матрица для вычисления распределения Сигма-точек
+	 *
+	 * Размерность 1xL
+	 */
+	UKFSIF_INIT_x_1xL_ones_TEMP,
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief 	Скорректированный вектор пространства состояний
@@ -242,7 +258,7 @@ typedef enum
 	 *
 	 * Размерность:  Lx1
 	 */
-	UKFSIF_INIT_meas,
+	UKFSIF_INIT_y_posteriori,
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief  Вектор
@@ -600,7 +616,7 @@ typedef enum
 	 *
 	 * @note  Размерность: "Lx1"
 	 */
-	UKFSIF_UPDATE_STATE_ESTIMATE_meas,
+	UKFSIF_UPDATE_STATE_ESTIMATE_y_posteriori,
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief  Вектор-столбец инновации
@@ -669,6 +685,20 @@ typedef enum
 	 * Размерность "Lx(2L+1)"
 	 */
 	UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict,
+
+	/*------------------------------------------------------------------------*//**
+	 * @brief
+	 *
+	 * Размерность "LxL"
+	 */
+	UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP,
+
+	/*------------------------------------------------------------------------*//**
+	 * @brief
+	 *
+	 * Размерность "1xL"
+	 */
+	UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_ones_TEMP,
 
 	UKFSIF_CALC_THE_SIGMA_POINTS_ARR_CELL_NUMB,
 } ukfsif_calc_the_sigma_points_e;
@@ -782,7 +812,7 @@ typedef struct
 {
 	uint16_t stateLen;
 
-	ukfmo_matrix_s *pMatrix_a[];
+	ukfmo_matrix_s *pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_ARR_CELL_NUMB];
 } ukfsif_update_err_covar_s;
 
 typedef struct
@@ -935,7 +965,7 @@ __UKFSIF_CheckMatrixStructValidation(
 #define __UKFSIF_CheckStateLen(x)
 
 #if !defined(UKFSIF_SIZE_MAX)
-#define UKFSIF_SIZE_MAX 		SIZE_MAX
+	#define UKFSIF_SIZE_MAX 		SIZE_MAX
 #endif
 /*#### |End  | <-- Секция - "Определение макросов" ###########################*/
 

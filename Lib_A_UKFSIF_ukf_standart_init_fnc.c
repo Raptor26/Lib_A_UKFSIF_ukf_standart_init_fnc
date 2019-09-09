@@ -310,6 +310,12 @@ UKFSIF_Init_SetMatrixPointers(
 	pData_s->calcTheSigmaPoints_s.pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_predict]);
 
+	pData_s->calcTheSigmaPoints_s.pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_x_LxL_TEMP]);
+
+	pData_s->calcTheSigmaPoints_s.pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_ones_TEMP] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_x_1xL_ones_TEMP]);
+
 	pData_s->calcTheSigmaPoints_s.stateLen = stateLen;
 
 	/* Проверка, а все ли матрицы инициализированы */
@@ -323,6 +329,10 @@ UKFSIF_Init_SetMatrixPointers(
 		 * См. на значение notInitMatrixIndexNumb - это индекс неинициализированной структуры */
 		while (1);
 	}
+
+	/* Заполнение единичной матрицы (необходимо для шага генерации Сигма-точек )*/
+	UKFMO_MatrixOnes(
+		pInit_s->pMatrix_s_a[UKFSIF_INIT_x_1xL_ones_TEMP]);
 	/* <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
 
 	/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */
@@ -543,8 +553,8 @@ UKFSIF_Init_SetMatrixPointers(
 	pData_s->updateState_s.pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_y_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_y_apriori]);
 
-	pData_s->updateState_s.pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_meas] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_meas]);
+	pData_s->updateState_s.pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_y_posteriori] =
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_y_posteriori]);
 
 	pData_s->updateState_s.pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_innovation]);
@@ -680,6 +690,7 @@ UKFSIF_Step1_CalculateTheSigmaPoints(
 	ukfsif_calc_the_sigma_points_s 	*pData_s,
 	__UKFSIF_FPT__ 					sqrtLAndLambda)
 {
+
 	/* Заполнить первый столбец матрицы Сигма-точек */
 	size_t j, i;
 	for (j = 0u; (j < pData_s->stateLen); j++)
@@ -687,6 +698,15 @@ UKFSIF_Step1_CalculateTheSigmaPoints(
 		pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[j * (pData_s->stateLen * 2u + 1u)] =
 			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict]->pData[j];
 	}
+
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	ukfmo_fnc_status_e matOperatiosStatus_e =
+	#endif
+		UKFMO_MatrixMultiplication(
+			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict],
+			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_ones_TEMP],
+			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 	UKFMO_MatrixMultScale(
 		pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP],
@@ -698,13 +718,26 @@ UKFSIF_Step1_CalculateTheSigmaPoints(
 	{
 		for (i = 0u; i < pData_s->stateLen; i++)
 		{
-			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[jIdx * iIdx] =
-				pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict]->pData[j * i]
-				+ pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]->pData[j * i];
+			size_t convertIndex_chi_predict =
+				__UKFMO_GetIndexInOneFromTwoDim(
+					pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict], jIdx, iIdx);
+			size_t convertIndex_chi_predictOfsset =
+				__UKFMO_GetIndexInOneFromTwoDim(
+					pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict], jIdx, iIdx + pData_s->stateLen);
+			size_t convertIndex_x_predict_LxL =
+				__UKFMO_GetIndexInOneFromTwoDim(
+					pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP], j, i);
+			size_t convertIndex_sqrtP =
+				__UKFMO_GetIndexInOneFromTwoDim(
+					pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP], j, i);
 
-			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[jIdx * (iIdx + pData_s->stateLen)] =
-				pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict]->pData[j * i]
-				+ pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]->pData[j * i];
+			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[convertIndex_chi_predict] =
+				pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP]->pData[convertIndex_x_predict_LxL]
+				+ pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]->pData[convertIndex_sqrtP];
+
+			pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_chi_predict]->pData[convertIndex_chi_predictOfsset] =
+				pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_x_predict_LxL_TEMP]->pData[convertIndex_x_predict_LxL]
+				- pData_s->pMatrix_a[UKFSIF_CALC_THE_SIGMA_POINTS_sqrtP]->pData[convertIndex_sqrtP];
 
 			iIdx++;
 			if (iIdx >= ( pData_s->stateLen + 1u))
@@ -814,23 +847,35 @@ UKFSIF_Step3_CalculateCrossCovarOfStateAndOut(
 		}
 
 		/* Умножение вектор-столбца на вектор-строку */
-		UKFMO_MatrixMultiplication(
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_chi_apriori_MINUS_x_apriori],
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_psi_apriori_MINUS_y_apriori_TRANSPOSE],
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_mult_2_matrix]);
+		#if defined (__UKFMO_CHEKING_ENABLE__)
+		ukfmo_fnc_status_e matOperatiosStatus_e =
+		#endif
+			UKFMO_MatrixMultiplication(
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_chi_apriori_MINUS_x_apriori],
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_psi_apriori_MINUS_y_apriori_TRANSPOSE],
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_mult_2_matrix]);
+		__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 		/* Умножение матрицы на скалярный коэффициент из вектора весовых
 		 * коэффициентов */
-		UKFMO_MatrixMultScale(
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_mult_2_matrix],
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_muCovar]->pData[i],
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_mult_2_matrix]);
+		#if defined (__UKFMO_CHEKING_ENABLE__)
+		matOperatiosStatus_e =
+		#endif
+			UKFMO_MatrixMultScale(
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_mult_2_matrix],
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_muCovar]->pData[i],
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_mult_2_matrix]);
+		__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 		/* Сложить с результатом, полученным на предыдущей итерации цикла */
-		UKMO_MatrixAdition(
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_Pxy],
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_mult_2_matrix],
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_Pxy]);
+		#if defined (__UKFMO_CHEKING_ENABLE__)
+		matOperatiosStatus_e =
+		#endif
+			UKMO_MatrixAdition(
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_Pxy],
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_mult_2_matrix],
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_Pxy]);
+		__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 	}
 }
 
@@ -848,9 +893,13 @@ void
 UKFSIF_Step3_CalculateCovarianceOfPredictedOutput(
 	ukfsif_calc_covar_of_predict_output_s *pData_s)
 {
-	UKFMO_CopyMatrix(
-		pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
-		pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	ukfmo_fnc_status_e matOperatiosStatus_e =
+	#endif
+		UKFMO_CopyMatrix(
+			pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
+			pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 	UKFSIF_CalcCovarGeneric(
 		&pData_s->covarGeneric_s);
@@ -862,9 +911,13 @@ UKFSIF_Step3_CalculateCovarianceOfPredictedOutputAndCrossCovariance(
 {
 	/* Calculate covariance of predicted output -->>>>>>>>>>>>>>>>>>>>>>>>>>> */
 	/* Скопировать матрицу шумов в матрицу Ковариации */
-	UKFMO_CopyMatrix(
-		pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
-		pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	ukfmo_fnc_status_e matOperatiosStatus_e =
+	#endif
+		UKFMO_CopyMatrix(
+			pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
+			pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 	/* Рассчитать ковариацию */
 	UKFSIF_CalcCovarGeneric(
@@ -914,27 +967,43 @@ UKFSIF_CalcCovarGeneric(
 		}
 
 		/* Транспонирование */
-		UKFMO_MatrixTranspose(
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori],
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori_TRANSPOSE]);
+		#if defined (__UKFMO_CHEKING_ENABLE__)
+		ukfmo_fnc_status_e matOperatiosStatus_e =
+		#endif
+			UKFMO_MatrixTranspose(
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori],
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori_TRANSPOSE]);
+		__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 		/* Умножение вектор-столбца на его транспонированную версию */
-		UKFMO_MatrixMultiplication(
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori],
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori_TRANSPOSE],
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX]);
+		#if defined (__UKFMO_CHEKING_ENABLE__)
+		matOperatiosStatus_e =
+		#endif
+			UKFMO_MatrixMultiplication(
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori],
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori_TRANSPOSE],
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX]);
+		__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 		/* Умножение матрицы LxL на скаляр весового коэффициента */
-		UKFMO_MatrixMultScale(
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX],
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_muCovar]->pData[i],
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX]);
+		#if defined (__UKFMO_CHEKING_ENABLE__)
+		matOperatiosStatus_e =
+		#endif
+			UKFMO_MatrixMultScale(
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX],
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_muCovar]->pData[i],
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX]);
+		__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 		/* Сложить с предыдущим результатом */
-		UKMO_MatrixAdition(
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX],
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori]);
+		#if defined (__UKFMO_CHEKING_ENABLE__)
+		matOperatiosStatus_e =
+		#endif
+			UKMO_MatrixAdition(
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_MULT_2_MATRIX],
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori]);
+		__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 	}
 }
 
@@ -952,10 +1021,14 @@ void
 UKFSIF_CaclMeanGeneric(
 	ukfsif_calc_mean_generic_s *pData_s)
 {
-	UKFMO_MatrixMultiplication(
-		pData_s->pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_sigma_apriori],
-		pData_s->pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_muMean],
-		pData_s->pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_vect_apriori]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	ukfmo_fnc_status_e matOperatiosStatus_e =
+	#endif
+		UKFMO_MatrixMultiplication(
+			pData_s->pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_sigma_apriori],
+			pData_s->pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_muMean],
+			pData_s->pMatrix_a[UKFSIF_CALC_MEAN_GENERIC_vect_apriori]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 }
 
 /*-------------------------------------------------------------------------*//**
@@ -973,18 +1046,31 @@ UKFSIF_Step4_CalcKalmanGain(
 	ukfsif_calc_kalman_gain_s *pData_s)
 {
 	/* Найти обратную матрицу от P_yy */
-	UKFMO_MatrixIdentity(
-		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV]);
-	UKFMO_MatrixInverse(
-		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy],
-		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	ukfmo_fnc_status_e matOperatiosStatus_e =
+	#endif
+		UKFMO_MatrixIdentity(
+			pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
+
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	matOperatiosStatus_e =
+	#endif
+		UKFMO_MatrixInverse(
+			pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy],
+			pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
+//	__UKFMO_CheckMatrixSingularity(matOperatiosStatus_e);
 
 	/* Найти матрицу усиления Калмана */
-	UKFMO_MatrixMultiplication(
-		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pxy],
-		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV],
-		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_K]);
-
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	matOperatiosStatus_e =
+	#endif
+		UKFMO_MatrixMultiplication(
+			pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pxy],
+			pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV],
+			pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_K]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 }
 
 /*-------------------------------------------------------------------------*//**
@@ -1005,23 +1091,35 @@ UKFSIF_Step4_UpdateStateEstimate(
 {
 	/* Найти Инновацию, т.е. разницу между вектором измерений и его
 	 * предсказанным значением */
-	UKMO_MatrixSubstraction(
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_meas],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_x_apriori],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	ukfmo_fnc_status_e matOperatiosStatus_e =
+	#endif
+		UKMO_MatrixSubstraction(
+			pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_y_posteriori],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_y_apriori],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 	/* Умножить матрицу усиления на Инновацию */
-	UKFMO_MatrixMultiplication(
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_K],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	matOperatiosStatus_e =
+	#endif
+		UKFMO_MatrixMultiplication(
+			pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_K],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 	/* Сложить вектор пространства состояний с умноженной на матрицу
 	 * усиления Инновацией */
-	UKMO_MatrixAdition(
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_x_apriori],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_x_posteriori]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	matOperatiosStatus_e =
+	#endif
+		UKMO_MatrixAdition(
+			pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_x_apriori],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_innovation],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_STATE_ESTIMATE_x_posteriori]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 }
 
 /*-------------------------------------------------------------------------*//**
@@ -1040,28 +1138,44 @@ UKFSIF_Step4_UpdateErrorCovariance(
 	ukfsif_update_err_covar_s *pData_s)
 {
 	/* Найти транспонированную матрицу от матрицы коэффициентов усиления */
-	UKFMO_MatrixTranspose(
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K_TRANSPOSE]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	ukfmo_fnc_status_e matOperatiosStatus_e =
+	#endif
+		UKFMO_MatrixTranspose(
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K_TRANSPOSE]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 	/* Умножить матрицу усиления на Pyy */
-	UKFMO_MatrixMultiplication(
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_Pyy],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	matOperatiosStatus_e =
+	#endif
+		UKFMO_MatrixMultiplication(
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_Pyy],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 	/* Результат умножения K и Pyy  умножить на транспонированную матрицу
 	 * коэффициентов усиления */
-	UKFMO_MatrixMultiplication(
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K_TRANSPOSE],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	matOperatiosStatus_e =
+	#endif
+		UKFMO_MatrixMultiplication(
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K_TRANSPOSE],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 	/* из "P_k|k-1" вычесть результат, полученный выше */
-	UKMO_MatrixSubstraction(
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_apriori],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori],
-		pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	matOperatiosStatus_e =
+	#endif
+		UKMO_MatrixSubstraction(
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_apriori],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
+	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 }
 /*#### |End  | <-- Секция - "Описание глобальных функций" ####################*/
