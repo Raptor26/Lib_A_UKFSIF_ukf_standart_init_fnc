@@ -204,20 +204,20 @@ UKFSIF_CalculateTheSigmaPoints_2L1(
 	}
 }
 
-void
-UKFSIF_StructInit_Step2Data(
-	ukfsif_step2_params_2l1_s 		*pData_s)
-{
-	size_t i;
-	for (i = 0; i < UKFSIF_STEP2_ARR_CELL_NUMB; i++)
-	{
-		/* Сброс указателей на структуры в NULL */
-		pData_s->pMatrix_a[i] = NULL;
-	}
-
-	/* Сброс длины пространства состояний в нуль */
-	pData_s->stateLen = 0u;
-}
+//void
+//UKFSIF_StructInit_Step2Data(
+//	ukfsif_step2_params_2l1_s 		*pData_s)
+//{
+//	size_t i;
+//	for (i = 0; i < UKFSIF_STEP2_ARR_CELL_NUMB; i++)
+//	{
+//		/* Сброс указателей на структуры в NULL */
+//		pData_s->pMatrix_a[i] = NULL;
+//	}
+//
+//	/* Сброс длины пространства состояний в нуль */
+//	pData_s->stateLen = 0u;
+//}
 
 /*-------------------------------------------------------------------------*//**
  * @author    Mickle Isaev
@@ -492,7 +492,7 @@ UKFSIF_Init_SetMatrixPointers(
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_priory_MINUS_x_priory]);
 
 	pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_psi_apriori_MINUS_y_apriori_TRANSPOSE] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_STEP2_psi_priory_MINUS_y_priory]);
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_psi_priory_MINUS_y_priory_TRANSPOSE]);
 
 	pData_s->calcCrossCovarOfStateAndOut_s.pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_mult_2_matrix] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_result_of_mult_2_matrix]);
@@ -605,71 +605,71 @@ UKFSIF_Init_SetMatrixPointers(
 	/* Проверка адресов матриц */
 }
 
-void
-UKFSIF_Init_Step2Data(
-	ukfsif_step2_params_2l1_s 		*pData_s,
-	ukfsif_step2_params_2l1_init_s 	*pInit_s)
-{
-	/* Адреса структур "ukfsif_step2_params_2l1_s" и
-	 * "ukfsif_step2_params_2l1_init_s" не должны совпадать */
-	if (pInit_s == pData_s)
-	{
-		while (1);
-	}
-
-//	/* Сброс указателей в нуль */
+//void
+//UKFSIF_Init_Step2Data(
+//	ukfsif_step2_params_2l1_s 		*pData_s,
+//	ukfsif_step2_params_2l1_init_s 	*pInit_s)
+//{
+//	/* Адреса структур "ukfsif_step2_params_2l1_s" и
+//	 * "ukfsif_step2_params_2l1_init_s" не должны совпадать */
+//	if (pInit_s == pData_s)
+//	{
+//		while (1);
+//	}
+//
+////	/* Сброс указателей в нуль */
+////	size_t i;
+////	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
+////	{
+////		pData_s->pMemAddr_a[i] = NULL;
+////	}
+////	/* Сброс длины вектора пространства состояний */
+////	pData_s->stateLen = 0u;
+////
+////	/* Копирование указателей из структуры инициализации в рабочую структуру */
+////	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
+////	{
+////		pData_s->pMemAddr_a[i] = pInit_s->pMemAddr_a[i];
+////	}
+////
+////	/* Копирование длины вектора пространства состояний */
+////	pData_s->stateLen = pInit_s->stateLen;
+////
+////	/* Проверка области памяти на указатель NULL */
+////	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
+////	{
+////		/* Если адрес равен NULL */
+////		if (pData_s->pMemAddr_a[i] == NULL)
+////		{
+////			/* Зависнуть */
+////			while (1);
+////		}
+////	}
+////	/* Если длина вектора пространства состояний меньше 1 */
+////	if (pData_s->stateLen < 1u)
+////	{
+////		/* Зависнуть */
+////		while (1);
+////	}
+//
 //	size_t i;
-//	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
-//	{
-//		pData_s->pMemAddr_a[i] = NULL;
-//	}
-//	/* Сброс длины вектора пространства состояний */
-//	pData_s->stateLen = 0u;
 //
-//	/* Копирование указателей из структуры инициализации в рабочую структуру */
-//	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
+//	/* Проверка массива указателей на структуры */
+//	for (i = 0;
+//		 i < ((size_t) UKFSIF_STEP2_ARR_CELL_NUMB);
+//		 i++)
 //	{
-//		pData_s->pMemAddr_a[i] = pInit_s->pMemAddr_a[i];
-//	}
-//
-//	/* Копирование длины вектора пространства состояний */
-//	pData_s->stateLen = pInit_s->stateLen;
-//
-//	/* Проверка области памяти на указатель NULL */
-//	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
-//	{
-//		/* Если адрес равен NULL */
-//		if (pData_s->pMemAddr_a[i] == NULL)
+//		/* Если один из указателей на матрицы не инициализирован */
+//		if (pData_s->pMatrix_a[i]->pData 	== NULL ||
+//			pData_s->pMatrix_a[i]->numCols 	== 0u 	||
+//			pData_s->pMatrix_a[i]->numRows 	== 0u	||
+//			pData_s->pMatrix_a[i] 			== NULL)
 //		{
 //			/* Зависнуть */
 //			while (1);
 //		}
 //	}
-//	/* Если длина вектора пространства состояний меньше 1 */
-//	if (pData_s->stateLen < 1u)
-//	{
-//		/* Зависнуть */
-//		while (1);
-//	}
-
-	size_t i;
-
-	/* Проверка массива указателей на структуры */
-	for (i = 0;
-		 i < ((size_t) UKFSIF_STEP2_ARR_CELL_NUMB);
-		 i++)
-	{
-		/* Если один из указателей на матрицы не инициализирован */
-		if (pData_s->pMatrix_a[i]->pData 	== NULL ||
-			pData_s->pMatrix_a[i]->numCols 	== 0u 	||
-			pData_s->pMatrix_a[i]->numRows 	== 0u	||
-			pData_s->pMatrix_a[i] 			== NULL)
-		{
-			/* Зависнуть */
-			while (1);
-		}
-	}
-}
+//}
 
 /*-------------------------------------------------------------------------*//**
  * @author    Mickle Isaev
