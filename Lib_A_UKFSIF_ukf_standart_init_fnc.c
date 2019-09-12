@@ -137,90 +137,6 @@ UKFSIF_InitWeightVectorCov(
 
 /*-------------------------------------------------------------------------*//**
  * @author    Mickle Isaev
- * @date      26-авг-2019
- *
- * @brief    Функция генерирует массив Сигма-точек методом 2L+1
- *
- * @param[in]       *pStateVect:	Указатель на двумерный массив,
- * 									содержащий матрицу пространства состояний
- * @param[out]   	*pSigmaPoints: Указатель на двумерный массив,
- * @param[in,out]   *pSqrtP: Пп sqrt p
- * @param[in]    	sqrtLenLambda: Длина лямбда
- * @param[in]    	stateVectLen: Государство vect длина
- * @param[in]    	sigmaPointsColNumb:    Сигма указывает на онемение
- */
-void
-UKFSIF_CalculateTheSigmaPoints_2L1(
-	__UKFSIF_FPT__ *pStateVect,
-	__UKFSIF_FPT__ *pSigmaPoints,
-	__UKFSIF_FPT__ *pSqrtP, 			/* Указатель на двумерный массив, в котором содержится квадратный корень из матрицы ковариации */
-	__UKFSIF_FPT__  sqrtLenLambda,
-	uint16_t 		stateVectLen 		/* Длина вектора пространства состояний, совпадает с количеством строк матрицы Сигма-точек */
-)
-{
-	/* Количество столбцов матрицы Сигма-точек */
-	uint16_t sigmaPointsColNumb =
-		(stateVectLen * 2u) + 1u;
-
-	/* Заполнение 1-го столбца матрицы Сигма-точек */
-	size_t j;
-	for (j = 0u; j < stateVectLen; j++)
-	{
-		/* Копирование матрицы вектора пространства состояний в 1-й
-		 * столбец матрицы Сигма-точек */
-		/* Помни, pSigmaPoints 	- указатель на двумерный массив
-		 * Помни, pStateVect 	- указатель на двумерный массив */
-		pSigmaPoints[j * stateVectLen] =
-			pStateVect[j * stateVectLen];
-	}
-
-	/* Умножить матрицу квадратного корня из ковариации на скаляр */
-	for (j = 0u; j < (stateVectLen * sigmaPointsColNumb); j++)
-	{
-		pSqrtP[j] *= sqrtLenLambda;
-	}
-
-	/* Генерация остальных сигма-точек */
-	size_t i;
-	size_t jIdx = 0u, iIdx = 1u;
-	/* @FIXME Удалить эту переменную и заменить на значение из принимаемого параметра */
-	size_t iIdxOffset = stateVectLen;
-	for (j = 0u; j < stateVectLen; j++)
-	{
-		for (i = 0u; i < stateVectLen; i++)
-		{
-			pSigmaPoints[jIdx * iIdx] =
-				pStateVect[j * i] + pSqrtP[j * i];
-
-			pSigmaPoints[jIdx * (iIdx + iIdxOffset)] =
-				pStateVect[j * i] - pSqrtP[j * i];
-			iIdx++;
-			if (iIdx >= (iIdxOffset + 1u))
-			{
-				iIdx = 1u;
-				jIdx++;
-			}
-		}
-	}
-}
-
-//void
-//UKFSIF_StructInit_Step2Data(
-//	ukfsif_step2_params_2l1_s 		*pData_s)
-//{
-//	size_t i;
-//	for (i = 0; i < UKFSIF_STEP2_ARR_CELL_NUMB; i++)
-//	{
-//		/* Сброс указателей на структуры в NULL */
-//		pData_s->pMatrix_a[i] = NULL;
-//	}
-//
-//	/* Сброс длины пространства состояний в нуль */
-//	pData_s->stateLen = 0u;
-//}
-
-/*-------------------------------------------------------------------------*//**
- * @author    Mickle Isaev
  * @date      04-сен-2019
  *
  * @brief    Функция сбрасывает массив структур указателей на матрицы
@@ -237,11 +153,7 @@ UKFIS_StructInit(
 	size_t i;
 	for (i = 0u; i < UKFSIF_INIT_ARR_CELL_NUMB; i++)
 	{
-		/* Сброс параметров структуры в значения по умолчанию */
-//		pInit_s->pMatrix_s_a[i]->numCols 	= 0u;
-//		pInit_s->pMatrix_s_a[i]->numRows 	= 0u;
-//		pInit_s->pMatrix_s_a[i]->pData 		= NULL;
-
+		/* Сброс указателя на структуру в NULL */
 		pInit_s->pMatrix_s_a[i] = NULL;
 	}
 }
@@ -250,7 +162,8 @@ UKFIS_StructInit(
  * @author    Mickle Isaev
  * @date      04-сен-2019
  *
- * @brief    Функция выполняет проверку массива структур на предмет инициализации
+ * @brief 	Функция выполняет проверку массива структур на предмет корректности
+ * 			инициализации
  *
  * @para[in]  	*pMatrix_s:   	Указатель на массив структур указателей на
  * 								матрицы
@@ -604,72 +517,6 @@ UKFSIF_Init_SetMatrixPointers(
 
 	/* Проверка адресов матриц */
 }
-
-//void
-//UKFSIF_Init_Step2Data(
-//	ukfsif_step2_params_2l1_s 		*pData_s,
-//	ukfsif_step2_params_2l1_init_s 	*pInit_s)
-//{
-//	/* Адреса структур "ukfsif_step2_params_2l1_s" и
-//	 * "ukfsif_step2_params_2l1_init_s" не должны совпадать */
-//	if (pInit_s == pData_s)
-//	{
-//		while (1);
-//	}
-//
-////	/* Сброс указателей в нуль */
-////	size_t i;
-////	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
-////	{
-////		pData_s->pMemAddr_a[i] = NULL;
-////	}
-////	/* Сброс длины вектора пространства состояний */
-////	pData_s->stateLen = 0u;
-////
-////	/* Копирование указателей из структуры инициализации в рабочую структуру */
-////	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
-////	{
-////		pData_s->pMemAddr_a[i] = pInit_s->pMemAddr_a[i];
-////	}
-////
-////	/* Копирование длины вектора пространства состояний */
-////	pData_s->stateLen = pInit_s->stateLen;
-////
-////	/* Проверка области памяти на указатель NULL */
-////	for (i = 0; i < UKFSIF_STEP2_MEM_CELL_NUMB; i++)
-////	{
-////		/* Если адрес равен NULL */
-////		if (pData_s->pMemAddr_a[i] == NULL)
-////		{
-////			/* Зависнуть */
-////			while (1);
-////		}
-////	}
-////	/* Если длина вектора пространства состояний меньше 1 */
-////	if (pData_s->stateLen < 1u)
-////	{
-////		/* Зависнуть */
-////		while (1);
-////	}
-//
-//	size_t i;
-//
-//	/* Проверка массива указателей на структуры */
-//	for (i = 0;
-//		 i < ((size_t) UKFSIF_STEP2_ARR_CELL_NUMB);
-//		 i++)
-//	{
-//		/* Если один из указателей на матрицы не инициализирован */
-//		if (pData_s->pMatrix_a[i]->pData 	== NULL ||
-//			pData_s->pMatrix_a[i]->numCols 	== 0u 	||
-//			pData_s->pMatrix_a[i]->numRows 	== 0u	||
-//			pData_s->pMatrix_a[i] 			== NULL)
-//		{
-//			/* Зависнуть */
-//			while (1);
-//		}
-//	}
-//}
 
 /*-------------------------------------------------------------------------*//**
  * @author    Mickle Isaev

@@ -335,57 +335,6 @@ typedef enum
 	UKFSIF_INIT_ARR_CELL_NUMB,
 } ukfsif_init_point_mem_matrix_struct_e;
 
-//typedef enum
-//{
-//	UKFSIF_STEP2_MUMEAN = 0u,
-//	UKFSIF_STEP2_MUCOV,
-//	UKFSIF_STEP2_Q,
-//	UKFSIF_STEP2_chi_priory,
-//	UKFSIF_STEP2_x_priory,
-//
-//	/*------------------------------------------------------------------------*//**
-//	 * @brief 	Вектор-столбец размером "Lx1"
-//	 */
-//	UKFSIF_STEP2_chi_priory_MINUS_x_priory,
-//
-//	/*------------------------------------------------------------------------*//**
-//	 * @brief 	Вектор строка размером "1xL"
-//	 */
-//	UKFSIF_STEP2_chi_priory_MINUS_x_priory_TRANPOSE,
-//
-//	/*------------------------------------------------------------------------*//**
-//	 * @brief 	Матрица для записи результата умножения матриц
-//	 * 			(chi_k|k-1 - x_k|k-1) * Transpose(chi_k|k-1 - x_k|k-1)
-//	 */
-//	UKFSIF_STEP2_RESULT_OF_MULT_2_MATRIX,
-//
-//	UKFSIF_STEP2_P_apriory,
-//
-//	/*------------------------------------------------------------------------*//**
-//	 * @brief 	Матрица размерностью "LxL*2+1"
-//	 * @note 	Эта матрица используется на шаге "Step2 Calculate covariance of predicted state"
-//	 * 			и "Step3 Calculate cross-covariance of state and output"
-//	 */
-//	UKFSIF_STEP2_chi_priory_MINUS_x_priory_TEMP,
-//
-//	UKFSIF_STEP2_ARR_CELL_NUMB,
-//} ukfsif_step2_point_memory_place_e;
-
-//typedef enum
-//{
-//	UKFSIF_STEP3_MUMEAN = 0,
-//	UKFSIF_STEP3_MUCOV,
-//
-//	UKFSIF_STEP3_R,
-//
-//	UKFSIF_STEP3_psi_apriori,
-//
-//	UKFSIF_STEP3_y_apriori,
-//
-//
-//	UKFSIF_STEP3_ARR_CELL_NUMB,
-//} ukfsif_step3_point_memory_place_e;
-
 typedef enum
 {
 	/*------------------------------------------------------------------------*//**
