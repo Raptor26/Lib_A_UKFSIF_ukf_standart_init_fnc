@@ -919,7 +919,7 @@ UKFSIF_Step3_CalculateCovarianceOfPredictedOutputAndCrossCovariance(
 			pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q]);
 	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
-	/* Рассчитать ковариацию */
+	/* Рассчитать ковариации */
 	UKFSIF_CalcCovarGeneric(
 		&pData_s->caclCovarOfPredictOut_s.covarGeneric_s);
 	/* <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
