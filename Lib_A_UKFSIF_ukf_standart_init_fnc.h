@@ -309,6 +309,13 @@ typedef enum
 	 *
 	 * Размерность LxL
 	 */
+	UKFSIF_INIT_PyyTmp,
+
+	/*------------------------------------------------------------------------*//**
+	 * @brief
+	 *
+	 * Размерность LxL
+	 */
 	UKFSIF_INIT_Pxy,
 
 	/*------------------------------------------------------------------------*//**
@@ -356,13 +363,13 @@ typedef enum
 	UKFSIF_CALC_COVAR_GENERIC_sigma_apriori,
 
 	/*------------------------------------------------------------------------*//**
-	 * @brief  	Матрица усредненной матрицы Сигма-точек
+	 * @brief  	Вектор-столбец усредненной матрицы Сигма-точек
 	 *          - "x_k|k-1"
 	 *          - "y_k|k-1"
 	 *
 	 * @note  	Размерность: "Lx1"
 	 */
-	UKFSIF_CALC_COVAR_GENERIC_vect_apriori,
+	UKFSIF_CALC_COVAR_GENERIC_x_apriori_or_y_apriori,
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief  Вектор-столбец для хранения:
@@ -378,7 +385,7 @@ typedef enum
 	 *         - Transpose("chi_k|k-1" - "x_k|k-1")
 	 *         - Transpose("psi_k|k-1" - "y_k|k-1")
 	 *
-	 * @note  	Размерность: "Lx1"
+	 * @note  	Размерность: "1xL"
 	 */
 	UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori_TRANSPOSE,
 
@@ -523,6 +530,7 @@ typedef enum
 {
 	UKFSIF_CALC_KALMAN_GAIN_Pxy = 0u,
 	UKFSIF_CALC_KALMAN_GAIN_Pyy,
+	UKFSIF_CALC_KALMAN_GAIN_Pyy_TMP,
 	UKFSIF_CALC_KALMAN_GAIN_Pyy_INV,
 	UKFSIF_CALC_KALMAN_GAIN_K,
 
@@ -594,6 +602,13 @@ typedef enum
 	 * @note  Размерность: "LxL"
 	 */
 	UKFSIF_UPDATE_ERR_COVAR_P_apriori,
+
+	/*------------------------------------------------------------------------*//**
+	 * @brief
+	 *
+	 * @note  Размерность: "LxL"
+	 */
+	UKFSIF_UPDATE_ERR_COVAR_P_sqrt,
 
 	/*------------------------------------------------------------------------*//**
 	 * @brief  Матрица коэффициентов усиления

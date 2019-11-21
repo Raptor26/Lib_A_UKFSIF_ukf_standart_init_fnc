@@ -139,7 +139,7 @@ UKFSIF_InitWeightVectorCov(
  * @author    Mickle Isaev
  * @date      04-сен-2019
  *
- * @brief    Функция сбрасывает адреса массив структур указателей на 
+ * @brief    Функция сбрасывает адреса массив структур указателей на
  *           матрицы в значение NULL
  *
  * @param[in] 	*pInit_s: 	Указатель на структуру, в которой содержится
@@ -282,12 +282,12 @@ UKFSIF_Init_SetMatrixPointers(
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_muCovar]);
 
 	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q] =
-		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_R]);
+		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_Q]);
 
 	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_chi_apriori]);
 
-	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_vect_apriori] =
+	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_x_apriori_or_y_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_x_apriori]);
 
 	pData_s->calcCovarOfPredictState_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori] =
@@ -357,7 +357,7 @@ UKFSIF_Init_SetMatrixPointers(
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_psi_apriori]);
 
-	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_vect_apriori] =
+	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_x_apriori_or_y_apriori] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_y_apriori]);
 
 	pData_s->caclCovarOfPredictOut_s.covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori] =
@@ -435,6 +435,9 @@ UKFSIF_Init_SetMatrixPointers(
 	pData_s->calcKalmanGain_s.pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_Pyy]);
 
+	pData_s->calcKalmanGain_s.pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_TMP] =
+			__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_PyyTmp]);
+
 	pData_s->calcKalmanGain_s.pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_Pyy_INV]);
 
@@ -502,6 +505,9 @@ UKFSIF_Init_SetMatrixPointers(
 
 	pData_s->updateErrCov_s.pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_Pyy] =
 		__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_Pyy]);
+
+	pData_s->updateErrCov_s.pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_sqrt] =
+			__UKFSIF_CheckMatrixStructValidation(pInit_s->pMatrix_s_a[UKFSIF_INIT_P_sqrt]);
 
 	pData_s->updateErrCov_s.stateLen = stateLen;
 
@@ -631,11 +637,13 @@ UKFSIF_Step2_CalculateCovarianceOfPredictedState(
 {
 	/* Копирование матрицы шумов Q в матрицу "P_k|k-1" до вызова функции
 	 * расчета ковариации */
-	memcpy(
-		(void*) pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
-		(void*) pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q],
-		(size_t) pData_s->covarGeneric_s.stateLen
-		* (pData_s->covarGeneric_s.stateLen * 2u + 1u));
+	#if defined (__UKFMO_CHEKING_ENABLE__)
+	ukfmo_fnc_status_e matOperationStatus_e =
+	#endif
+		UKFMO_CopyMatrix(
+			pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_covariance_apriori],
+			pData_s->covarGeneric_s.pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_R_or_Q]);
+	__UKFMO_CheckMatrixOperationStatus(matOperationStatus_e);
 
 	/* Вызов функции расчета ковариации */
 	UKFSIF_CalcCovarGeneric(
@@ -684,14 +692,20 @@ UKFSIF_Step3_CalculateCrossCovarOfStateAndOut(
 		for (j = 0u; j < pData_s->stateLen; j++)
 		{
 			/* Найти вектор-столбец разницы между "chi_k|k-1" и "x_k|k-1" */
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_chi_apriori_MINUS_x_apriori]->pData[j] =
-				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_chi_apriori]->pData[j * i]
-				- pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_x_apriori]->pData[j];
+			size_t idxColVect =
+				__UKFMO_GetIndexInOneFromTwoDim(pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_x_apriori], j, 0u);
+			size_t idxRowVect =
+				__UKFMO_GetIndexInOneFromTwoDim(pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_chi_apriori], j, i);
+			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_chi_apriori_MINUS_x_apriori]->pData[idxColVect] =
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_chi_apriori]->pData[idxRowVect]
+				- pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_x_apriori]->pData[idxColVect];
 
 			/* Найти транспонированный вектор-столбец разницы между "psi_k|k-1" и "y_k|k-1" */
-			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_psi_apriori_MINUS_y_apriori_TRANSPOSE]->pData[j] =
-				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_psi_apriori]->pData[j * i]
-				- pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_y_apriori]->pData[j];
+			idxColVect =
+				__UKFMO_GetIndexInOneFromTwoDim(pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_y_apriori], j, 0u);
+			pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_psi_apriori_MINUS_y_apriori_TRANSPOSE]->pData[idxColVect] =
+				pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_psi_apriori]->pData[idxRowVect]
+				- pData_s->pMatrix_a[UKFSIF_CALC_CROSSCOVAR_GENERIC_y_apriori]->pData[idxColVect];
 		}
 
 		/* Умножение вектор-столбца на вектор-строку */
@@ -801,9 +815,14 @@ UKFSIF_CalcCovarGeneric(
 		 * вектор-столбцом матрицы Сигма-точек */
 		for (j = 0u; j < pData_s->stateLen; j++)
 		{
-			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori]->pData[j] =
-				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori]->pData[j * i]
-				- pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_vect_apriori]->pData[j * pData_s->stateLen];
+			size_t idxColVect =
+				__UKFMO_GetIndexInOneFromTwoDim(pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_x_apriori_or_y_apriori], j, 0u);
+			size_t idxRowVect =
+				__UKFMO_GetIndexInOneFromTwoDim(pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori], j, i);
+
+			pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori_MINUS_state_apriori]->pData[idxColVect] =
+				pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_sigma_apriori]->pData[idxRowVect]
+				- pData_s->pMatrix_a[UKFSIF_CALC_COVAR_GENERIC_x_apriori_or_y_apriori]->pData[idxColVect];
 
 			/* Копирование каждого столбца во временный массив
 			 * "UKFSIF_STEP2_CHI_MINUS_STATE_TEMP" размерностью (Lx2L+1)
@@ -901,12 +920,18 @@ UKFSIF_Step4_CalcKalmanGain(
 			pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV]);
 	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
+	/* Выполнить копирование "UKFSIF_CALC_KALMAN_GAIN_Pyy" во временную
+	 * матрицу (т.к. иначе данные будут не валидны) */
+	UKFMO_CopyMatrix(
+		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_TMP],
+		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy]);
+
 	#if defined (__UKFMO_CHEKING_ENABLE__)
 	matOperatiosStatus_e =
 	#endif
 		UKFMO_MatrixInverse(
-			pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy],
-			pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV]);
+		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_TMP],
+		pData_s->pMatrix_a[UKFSIF_CALC_KALMAN_GAIN_Pyy_INV]);
 	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 //	__UKFMO_CheckMatrixSingularity(matOperatiosStatus_e);
 
@@ -1012,7 +1037,7 @@ UKFSIF_Step4_UpdateErrorCovariance(
 		UKFMO_MatrixMultiplication(
 			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori],
 			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_K_TRANSPOSE],
-			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_sqrt]);
 	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
 	/* из "P_k|k-1" вычесть результат, полученный выше */
@@ -1021,7 +1046,7 @@ UKFSIF_Step4_UpdateErrorCovariance(
 	#endif
 		UKMO_MatrixSubstraction(
 			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_apriori],
-			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori],
+			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_sqrt],
 			pData_s->pMatrix_a[UKFSIF_UPDATE_ERR_COVAR_P_posteriori]);
 	__UKFMO_CheckMatrixOperationStatus(matOperatiosStatus_e);
 
